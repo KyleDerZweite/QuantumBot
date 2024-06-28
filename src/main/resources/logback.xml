@@ -1,0 +1,18 @@
+<configuration>
+
+    <!-- Console Appender with Jansi for color support -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>
+                %cyan(%d{yyyy-MM-dd HH:mm:ss.SSS}) [%thread] %highlight(%-5level) %magenta(%logger{36}) - %msg%n%throwable
+            </pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Root logger configuration -->
+    <root level="debug">
+        <appender-ref ref="CONSOLE" />
+    </root>
+
+</configuration>
