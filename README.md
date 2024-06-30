@@ -1,6 +1,6 @@
-# LuxuryBot
+# QuantumBot
 
-LuxuryBot is a Discord bot built with JDA (Java Discord API) to enhance your Discord server experience with intuitive features.
+QuantumBot is a Discord bot built with JDA (Java Discord API) to enhance your Discord server experience with intuitive features.
 
 ## Features
 
