@@ -14,33 +14,25 @@
     <appender name="ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>logs/latest.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/latest.%d{yyyy-MM-dd}.log.zip</fileNamePattern>
+            <fileNamePattern>logs/log.%d{yyyy-MM-dd}.zip</fileNamePattern>
             <maxHistory>365</maxHistory> <!-- Number of days to keep -->
         </rollingPolicy>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS};[%thread];%-5level;%logger{36};%msg%n</pattern>
             <charset>UTF-8</charset>
         </encoder>
     </appender>
 
-    <!-- Error File Appender -->
-    <appender name="ERROR_FILE" class="ch.qos.logback.core.FileAppender">
-        <file>logs/error.log</file>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-            <charset>UTF-8</charset>
-        </encoder>
-    </appender>
-
-    <!-- Error Level Logger -->
-    <logger name="de.quantum" level="ERROR">
-        <appender-ref ref="ERROR_FILE" />
+    <!-- Logger for the de.quantum package -->
+    <logger name="de.quantum" level="DEBUG" additivity="false">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="ROLLING" />
     </logger>
 
     <!-- Root Logger -->
-    <root level="DEBUG">
-        <appender-ref ref="STDOUT" />
+    <root name="rootDebug" level="DEBUG">
         <appender-ref ref="ROLLING" />
+        <appender-ref ref="STDOUT" />
     </root>
 
 </configuration>
