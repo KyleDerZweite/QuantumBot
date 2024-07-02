@@ -52,7 +52,7 @@ public class DatabaseManager {
             }
             assert jdbcUrl != null;
             this.connection = DriverManager.getConnection(jdbcUrl, user, password);
-
+            log.info("Database connection established!");
         } catch (SQLException e) {
             log.error(e.getMessage(), e);
         }
@@ -81,8 +81,10 @@ public class DatabaseManager {
     }
 
     private ResultSet selectFrom(String selectStr, String tableStr) {
-        ResultSet rs = executeQuery("SELECT %s FROM %s".formatted(selectStr, tableStr));
+        String queryString = "SELECT %s FROM %s".formatted(selectStr, tableStr);
+        ResultSet rs = executeQuery(queryString);
         if (CheckUtils.checkNull(rs)) {
+            log.warn("{} returned null", queryString);
             return null;
         }
         return rs;

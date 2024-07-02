@@ -22,9 +22,7 @@ public class LanguageManager {
             ResourceBundle bundle = ResourceBundle.getBundle("lang", locale);
             LANGUAGES.put(locale, bundle);
         }
-
-        System.out.println(LANGUAGES);
-
+        log.info("Loaded {} languages", LANGUAGES.size());
     }
 
     public static String getString(String key) {
