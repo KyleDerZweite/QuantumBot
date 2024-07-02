@@ -25,8 +25,11 @@ dependencies {
     implementation("net.oneandone.reflections8:reflections8:0.11.7")
 
     implementation("org.fusesource.jansi:jansi:2.4.0")
-    implementation("org.slf4j:slf4j-api:2.0.5")
-    implementation("ch.qos.logback:logback-classic:1.5.6")
+    implementation("org.slf4j:slf4j-api:2.0.5")                             // SLF4J API
+    implementation("ch.qos.logback:logback-classic:1.5.6")                  // Logback Classic (with SLF4J binding)
+    implementation("ch.qos.logback:logback-core:1.4.14")                    // Logback Core (required for configuration)
+
+    implementation("org.postgresql:postgresql:42.7.2")
 }
 
 tasks.test {

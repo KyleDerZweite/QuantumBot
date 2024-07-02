@@ -29,7 +29,7 @@ public class OnReadyListener implements EventInterface<ReadyEvent> {
 
         event.getJDA().getPresence().setPresence(OnlineStatus.ONLINE, null);
         String readyString = "Successfully started: " + Utils.getJdaShardGuildCountString(event.getJDA());
-        Utils.log_success(readyString);
+        log.info(readyString);
     }
 
 
