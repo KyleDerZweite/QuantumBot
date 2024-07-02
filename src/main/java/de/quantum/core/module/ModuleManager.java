@@ -1,7 +1,10 @@
-package de.quantum.core.modules;
+package de.quantum.core.module;
 
 public class ModuleManager {
+
     private static volatile ModuleManager INSTANCE = null;
+
+    private static final long ALLOWED_PERMISSION_OFFSET = 590435596631761L;
 
     private ModuleManager() {
         if (INSTANCE != null) {
