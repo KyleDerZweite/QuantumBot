@@ -65,8 +65,8 @@ public class ShardMan extends ListenerAdapter {
     }
 
     public void shutdown() {
-        log.warn("Shutting down shard manager");
         if (CheckUtils.checkNotNull(shardManager)) {
+            log.warn("Shutting down shard manager");
             for (JDA jda : shardManager.getShards()) {
                 jda.getPresence().setPresence(OnlineStatus.OFFLINE, null);
                 log.info("Shutting down {}", Utils.getJdaShardGuildCountString(jda));
@@ -74,8 +74,8 @@ public class ShardMan extends ListenerAdapter {
             }
             this.shardManager.shutdown();
             this.shardManager = null;
+            log.info("Shutting down completed");
         }
-        log.info("Shutting down completed");
     }
 
 }

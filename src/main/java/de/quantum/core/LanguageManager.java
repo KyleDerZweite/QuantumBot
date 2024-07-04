@@ -30,9 +30,7 @@ public class LanguageManager {
     }
 
     public static String getString(String key, Locale locale) {
-        if (LANGUAGES.isEmpty()) {
-            loadLanguages();
-        }
+        loadLanguages();
         if (!LANGUAGES.containsKey(locale)) {
             log.warn("Language not found for locale {}", locale);
             locale = DEFAULT_LOCALE;
