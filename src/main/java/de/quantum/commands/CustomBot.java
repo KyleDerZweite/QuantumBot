@@ -25,9 +25,6 @@ public class CustomBot implements CommandInterface<SlashCommandInteractionEvent>
         return new CommandDataImpl("bot", "Starts / Stops / Updates the SubBot").addSubcommands(
                 new SubcommandData("start", "Start the SubBot").addOptions(
                         new OptionData(OptionType.STRING, "bot_token", "The Token of your bot u want to start. This token will be stored encrypted!", true),
-                        new OptionData(OptionType.INTEGER, "bot_type", "The Type of the Bot (Sub Bot / Show Bot)")
-                                .addChoice("SubBot", 2)
-                                .addChoice("ShowBot", 1),
                         new OptionData(OptionType.INTEGER, "activity_type", "The type of the activity your bot gonna have (can be changed later)", false)
                                 .addChoices(choices),
                         new OptionData(OptionType.STRING, "activity_name", "The activity name. Example: Playing <activity_name>", false),
