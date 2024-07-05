@@ -1,6 +1,8 @@
 package de.quantum.core.module;
 
 
+import de.quantum.core.commands.CommandAnnotation;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

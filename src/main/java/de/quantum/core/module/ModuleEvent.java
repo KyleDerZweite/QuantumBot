@@ -11,6 +11,4 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ModuleEvent {
     String moduleName();
-
-    Class<? extends GenericEvent>[] value() default {};
 }

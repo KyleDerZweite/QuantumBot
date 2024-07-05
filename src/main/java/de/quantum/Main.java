@@ -4,6 +4,7 @@ package de.quantum;
 import de.quantum.core.LanguageManager;
 import de.quantum.core.ShardMan;
 import de.quantum.core.database.DatabaseManager;
+import de.quantum.core.module.ModuleManager;
 
 import java.util.Scanner;
 
@@ -16,6 +17,7 @@ public class Main {
 
     private Main() {
         DatabaseManager.getInstance().init();
+        ModuleManager.getInstance().init();
 
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
         new Thread(this::checkStop).start();

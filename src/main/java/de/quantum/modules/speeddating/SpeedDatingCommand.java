@@ -14,7 +14,7 @@ public class SpeedDatingCommand implements CommandInterface<SlashCommandInteract
 
     @Override
     public CommandDataImpl getCommandData() {
-        return new CommandDataImpl("speed-dating", "Starts / Stops the speed-dating event").addSubcommands(
+        return new CommandDataImpl("speed_dating", "Starts / Stops the speed-dating event").addSubcommands(
                 new SubcommandData("start", ""),
                 new SubcommandData("stop", "")
         );
