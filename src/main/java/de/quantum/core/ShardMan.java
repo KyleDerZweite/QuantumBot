@@ -1,6 +1,8 @@
 package de.quantum.core;
 
 import de.quantum.core.events.EventReflector;
+import de.quantum.core.shutdown.ShutdownAnnotation;
+import de.quantum.core.shutdown.ShutdownInterface;
 import de.quantum.core.utils.CheckUtils;
 import de.quantum.core.utils.Utils;
 import lombok.Getter;
@@ -19,7 +21,8 @@ import java.util.EnumSet;
 import java.util.concurrent.Executors;
 
 @Slf4j
-public class ShardMan extends ListenerAdapter {
+@ShutdownAnnotation
+public class ShardMan extends ListenerAdapter implements ShutdownInterface {
 
     private static volatile ShardMan INSTANCE = null;
 
@@ -45,7 +48,6 @@ public class ShardMan extends ListenerAdapter {
                 .setRawEventsEnabled(true)
                 .setShardsTotal(Utils.TOTAL_SHARDS)
                 .addEventListeners(new EventReflector());
-
         this.shardManager = builder.build();
     }
 
@@ -64,6 +66,7 @@ public class ShardMan extends ListenerAdapter {
         }
     }
 
+    @Override
     public void shutdown() {
         if (CheckUtils.checkNotNull(shardManager)) {
             log.warn("Shutting down shard manager");
