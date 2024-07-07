@@ -52,7 +52,8 @@ public class CustomBotCommand implements CommandInterface<SlashCommandInteractio
                                 .addChoices(choices),
                         new OptionData(OptionType.STRING, "activity_name", "The activity name. Example: Playing <activity_name>", true),
                         new OptionData(OptionType.STRING, "activity_url", "The activity url. Supported by types: Watching, Streaming", false)
-                )
+                ),
+                new SubcommandData("status","Shows the Status of the current running custom-bots")
         );
     }
 
@@ -61,14 +62,6 @@ public class CustomBotCommand implements CommandInterface<SlashCommandInteractio
         
 
 
-        JDABuilder jdaBuilder = JDABuilder.create(Utils.getToken(), EnumSet.allOf(GatewayIntent.class))
-                .setStatus(OnlineStatus.DO_NOT_DISTURB)
-                .enableCache(EnumSet.allOf(CacheFlag.class))
-                .setSessionController(new ConcurrentSessionController())
-                .setCallbackPool(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()), true)
-                .setBulkDeleteSplittingEnabled(false)
-                .setRawEventsEnabled(true)
-                .addEventListeners(new EventReflector());
     }
 
     @Override
