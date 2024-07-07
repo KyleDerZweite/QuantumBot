@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class DatabaseManager {
@@ -80,14 +81,23 @@ public class DatabaseManager {
         return null;
     }
 
-    private ResultSet selectFrom(String selectStr, String tableStr) {
-        String queryString = "SELECT %s FROM %s".formatted(selectStr, tableStr);
-        ResultSet rs = executeQuery(queryString);
+    private ResultSet selectQuery(String query) {
+        ResultSet rs = executeQuery(query);
         if (CheckUtils.checkNull(rs)) {
-            log.warn("{} returned null", queryString);
+            log.warn("{} returned null", query);
             return null;
         }
         return rs;
+    }
+
+    private ResultSet selectFrom(String selectStr, String tableStr) {
+        String queryString = "SELECT %s FROM %s".formatted(selectStr, tableStr);
+        return selectQuery(queryString);
+    }
+
+    private ResultSet selectFromWhere(String selectStr, String tableStr, String whereConditionStr, String whereIdentifierStr) {
+        String queryString = "SELECT %s FROM %s WHERE %s='%s'".formatted(selectStr, tableStr, whereConditionStr, whereIdentifierStr);
+        return selectQuery(queryString);
     }
 
     public ArrayList<String> getVerifiedTokens() {
@@ -116,5 +126,30 @@ public class DatabaseManager {
         return 1L;
     }
 
+
+    public ConcurrentHashMap<String, String> getDummyBots() {
+        ResultSet rs = selectFrom("bot_id", "dummy_bots");
+        if (CheckUtils.checkNull(rs)) {
+            return null;
+        }
+        ConcurrentHashMap<String, String> dummyBotTokenMap = new ConcurrentHashMap<>();
+        try {
+            while (rs.next()) {
+                String botId = rs.getString("bot_id");
+                ResultSet botTokenSet = selectFromWhere("token", "bots", "bot_id", botId);
+                if (botTokenSet.next()) {
+                    String botToken = botTokenSet.getString("token");
+                    dummyBotTokenMap.put(botId, botToken);
+                }
+                botTokenSet.close();
+            }
+            rs.close();
+        } catch (SQLException e) {
+            log.error(e.getMessage(), e);
+        }
+
+
+        return dummyBotTokenMap;
+    }
 
 }

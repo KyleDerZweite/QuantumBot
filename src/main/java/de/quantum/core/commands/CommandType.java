@@ -6,7 +6,8 @@ import lombok.Getter;
 public enum CommandType {
     PUBLIC(true, false),
     GUILD_ONLY(false, false),
-    SUPPORT_GUILD_ONLY(false, true);
+    SUPPORT_GUILD_ONLY(false, true),
+    DUMMY(true, false),;
 
     private final boolean dmEnabled;
     private final boolean supportGuildOnly;

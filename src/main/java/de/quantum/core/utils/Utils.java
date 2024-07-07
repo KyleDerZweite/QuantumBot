@@ -3,14 +3,20 @@ package de.quantum.core.utils;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.ApplicationTeam;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 
-import java.awt.*;
+import java.awt.Color;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class Utils {
@@ -87,5 +93,27 @@ public class Utils {
     public static ApplicationTeam getTeamInfo(JDA jda) {
         return jda.retrieveApplicationInfo().complete().getTeam();
     }
+
+    public static <T extends GuildChannel> List<T> getAccessibleChannels(List<T> channels, Member selfMember) {
+        return channels.stream()
+                .filter(channel -> selfMember.hasPermission(channel, Permission.VIEW_CHANNEL))
+                .collect(Collectors.toList());
+    }
+
+    public static double calculatePercentage(int part, int total) {
+        if (total == 0) {
+            return 0.0;
+        }
+        return ((double) part / total) * 100;
+    }
+
+    public static String formatUptime(long uptimeMillis) {
+        long days = TimeUnit.MILLISECONDS.toDays(uptimeMillis);
+        long hours = TimeUnit.MILLISECONDS.toHours(uptimeMillis) % 24;
+        long minutes = TimeUnit.MILLISECONDS.toMinutes(uptimeMillis) % 60;
+        long seconds = TimeUnit.MILLISECONDS.toSeconds(uptimeMillis) % 60;
+        return String.format("%dd %dh %dm %ds", days, hours, minutes, seconds);
+    }
+
 
 }

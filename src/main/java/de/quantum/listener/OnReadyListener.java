@@ -5,6 +5,7 @@ import de.quantum.core.events.EventAnnotation;
 import de.quantum.core.events.EventInterface;
 import de.quantum.core.utils.CheckUtils;
 import de.quantum.core.utils.Utils;
+import de.quantum.modules.dummybots.DummyBotManager;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
