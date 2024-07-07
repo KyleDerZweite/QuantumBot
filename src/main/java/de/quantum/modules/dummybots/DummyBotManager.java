@@ -7,12 +7,14 @@ import de.quantum.core.shutdown.ShutdownInterface;
 import de.quantum.core.utils.CheckUtils;
 import de.quantum.core.utils.Secret;
 import de.quantum.core.utils.Utils;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.utils.ConcurrentSessionController;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,7 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DummyBotManager implements ShutdownInterface {
     private static volatile DummyBotManager INSTANCE = null;
 
-    private ConcurrentHashMap<String, JDA> dummyBotsMap = null;
+    @Getter
+    private ConcurrentHashMap<String, ArrayList<JDA>> dummyBotsMap = null;
 
     private DummyBotManager() {
         if (INSTANCE != null) {
@@ -53,22 +56,29 @@ public class DummyBotManager implements ShutdownInterface {
 
     public void startAll() {
         dummyBotsMap = new ConcurrentHashMap<>();
-        for (Map.Entry<String, String> dummyEntry : DatabaseManager.getInstance().getDummyBots().entrySet()) {
-            JDA jda = getDummyBotJDA(dummyEntry.getValue());
-            dummyBotsMap.put(dummyEntry.getKey(), jda);
-        }
+        DatabaseManager.getInstance().getDummyBots().forEach((guildId, dummyBotsArray) -> {
+            ArrayList<JDA> jdaList = new ArrayList<>();
+            dummyBotsArray.forEach((token) -> {
+                JDA jda = getDummyBotJDA(token);
+                jdaList.add(jda);
+            });
+            dummyBotsMap.put(guildId, jdaList);
+        });
     }
 
     public void stopAll() {
         if (dummyBotsMap == null || dummyBotsMap.isEmpty()) {
             return;
         }
-        for (Map.Entry<String, JDA> dummyEntry : dummyBotsMap.entrySet()) {
-            JDA jda = dummyEntry.getValue();
+        dummyBotsMap.forEach((guildId, jdaList) -> jdaList.forEach((jda) -> {
             jda.getPresence().setPresence(OnlineStatus.OFFLINE, null);
             jda.shutdown();
             jda.shutdownNow();
-        }
+        }));
+    }
+
+    public ArrayList<JDA> getGuildDummyJdaInstances(String guildId) {
+        return dummyBotsMap.get(guildId);
     }
 
     public boolean isDummyBot(String botId) {
@@ -88,11 +98,11 @@ public class DummyBotManager implements ShutdownInterface {
     public void shutdown() {
         if (CheckUtils.checkNotNull(dummyBotsMap)) {
             log.warn("Shutting down dummy bots");
-            for (JDA jda : dummyBotsMap.values()) {
+            dummyBotsMap.forEach((guildId, jdaList) -> jdaList.forEach((jda) -> {
                 jda.getPresence().setPresence(OnlineStatus.OFFLINE, null);
                 log.info("Shutting down {}", Utils.getJdaShardGuildCountString(jda));
                 jda.shutdown();
-            }
+            }));
             this.dummyBotsMap = null;
             log.info("Shutting down completed");
         }

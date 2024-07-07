@@ -16,6 +16,19 @@ import java.util.stream.Collectors;
 
 public class StatusUtils {
 
+    public static String getPermissionsValue(EnumSet<Permission> memberPermissions, EnumSet<Permission> allPermissions) {
+        StringBuilder permissionValue = new StringBuilder("```diff\n");
+        for (Permission permission : allPermissions) {
+            if (memberPermissions.contains(permission)) {
+                permissionValue.append("+ %s".formatted(permission.getName())).append("\n");
+            } else {
+                permissionValue.append("- %s".formatted(permission.getName())).append("\n");
+            }
+        }
+        permissionValue.append("```");
+        return permissionValue.toString();
+    }
+
     public static MessageEmbed getStatusEmbed(@NotNull JDA jda, @NotNull Guild guild, @NotNull Member member) {
         SelfUser bot = jda.getSelfUser();
         Member selfMember = guild.getSelfMember();
@@ -62,11 +75,13 @@ public class StatusUtils {
         // Bot Roles
         List<Role> roles = selfMember.getRoles();
         // Bot Permissions
-        EnumSet<Permission> permissions = selfMember.getPermissions();
+        EnumSet<Permission> memberPermissions = selfMember.getPermissions();
+        EnumSet<Permission> allPermissions = Permission.getPermissions(Permission.ALL_PERMISSIONS);
+        String permissionsValue = getPermissionsValue(memberPermissions, allPermissions);
 
         // Owner Info
         Member owner = guild.retrieveOwner().complete();
-        String ownerName = owner != null ? owner.getUser().getName() : "Unknown";
+        String ownerName = owner != null ? owner.getUser().getAsMention() : "Unknown";
 
         long gatewayPing = jda.getGatewayPing();
         RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
@@ -87,6 +102,7 @@ public class StatusUtils {
                 .addField("Accessible Channels",
                         String.format(
                                 """
+                                        ```prolog
                                         Text Channels: %d/%d (%.1f%%)
                                         Voice Channels: %d/%d (%.1f%%)
                                         Categories: %d/%d (%.1f%%)
@@ -96,7 +112,8 @@ public class StatusUtils {
                                         Private Threads: %d/%d (%.1f%%)
                                         News Threads: %d/%d (%.1f%%)
                                         Forum Channels: %d/%d (%.1f%%)
-                                        Media Channels: %d/%d (%.1f%%)""",
+                                        Media Channels: %d/%d (%.1f%%)
+                                        ```""",
                                 accessibleTextChannels.size(), totalTextChannels, textChannelPercentage,
                                 accessibleVoiceChannels.size(), totalVoiceChannels, voiceChannelPercentage,
                                 accessibleCategories.size(), totalCategories, categoryPercentage,
@@ -110,9 +127,7 @@ public class StatusUtils {
                 .addField("Roles", roles.stream()
                         .map(Role::getAsMention)
                         .collect(Collectors.joining(", ")), false)
-                .addField("Permissions", permissions.stream()
-                        .map(Permission::getName)
-                        .collect(Collectors.joining(", ")), false)
+                .addField("Permissions", permissionsValue, false)
                 .setColor(selfMember.getColor())
                 .setFooter("Requested by " + member.getEffectiveName(), member.getEffectiveAvatarUrl())
                 .build();

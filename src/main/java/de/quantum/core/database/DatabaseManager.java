@@ -127,19 +127,25 @@ public class DatabaseManager {
     }
 
 
-    public ConcurrentHashMap<String, String> getDummyBots() {
+    public ConcurrentHashMap<String, ArrayList<String>> getDummyBots() {
         ResultSet rs = selectFrom("bot_id", "dummy_bots");
         if (CheckUtils.checkNull(rs)) {
             return null;
         }
-        ConcurrentHashMap<String, String> dummyBotTokenMap = new ConcurrentHashMap<>();
+
+        ConcurrentHashMap<String, ArrayList<String>> guildDummyTokenMap = new ConcurrentHashMap<>();
         try {
             while (rs.next()) {
+                String guildId = rs.getString("guild_id");
+                if (!guildDummyTokenMap.containsKey(guildId)) {
+                    guildDummyTokenMap.put(guildId, new ArrayList<>());
+                }
+                ArrayList<String> tokens = guildDummyTokenMap.get(guildId);
                 String botId = rs.getString("bot_id");
                 ResultSet botTokenSet = selectFromWhere("token", "bots", "bot_id", botId);
                 if (botTokenSet.next()) {
                     String botToken = botTokenSet.getString("token");
-                    dummyBotTokenMap.put(botId, botToken);
+                    tokens.add(botToken);
                 }
                 botTokenSet.close();
             }
@@ -147,9 +153,7 @@ public class DatabaseManager {
         } catch (SQLException e) {
             log.error(e.getMessage(), e);
         }
-
-
-        return dummyBotTokenMap;
+        return guildDummyTokenMap;
     }
 
 }

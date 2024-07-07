@@ -63,7 +63,6 @@ public class CommandManager {
                     log.error(e.getMessage(), e);
                 }
             }
-            System.out.println(commandInterfaceList.stream().map((commandInterface -> commandInterface.getCommandData().getName())).toList());
         }
     }
 
