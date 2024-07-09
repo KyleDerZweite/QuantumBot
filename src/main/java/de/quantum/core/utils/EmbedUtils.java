@@ -1,6 +1,7 @@
 package de.quantum.core.utils;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
 import java.awt.*;
 import java.time.Instant;
@@ -22,5 +23,9 @@ public class EmbedUtils {
         return getEmbedBuilder().setColor(color);
     }
 
+
+    public static Button getMessageDeleteButton(String authorId) {
+        return Button.danger("delete_%s".formatted(authorId),":x:").asEnabled();
+    }
 
 }

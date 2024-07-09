@@ -128,7 +128,7 @@ public class DatabaseManager {
 
 
     public ConcurrentHashMap<String, ArrayList<String>> getDummyBots() {
-        ResultSet rs = selectFrom("bot_id", "dummy_bots");
+        ResultSet rs = selectFrom("*", "dummy_bots");
         if (CheckUtils.checkNull(rs)) {
             return null;
         }
@@ -154,6 +154,21 @@ public class DatabaseManager {
             log.error(e.getMessage(), e);
         }
         return guildDummyTokenMap;
+    }
+
+    public boolean isDummyBot(String botId) {
+        ResultSet rs = selectFromWhere("*", "dummy_bots", "bot_id", botId);
+        if (CheckUtils.checkNull(rs)) {
+            return false;
+        }
+        try {
+            if (rs.next()) {
+                return true;
+            }
+        } catch (SQLException e) {
+            log.debug(e.getMessage(), e);
+        }
+        return false;
     }
 
 }

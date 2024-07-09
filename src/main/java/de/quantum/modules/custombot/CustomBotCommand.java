@@ -3,11 +3,8 @@ package de.quantum.modules.custombot;
 import de.quantum.core.commands.CommandAnnotation;
 import de.quantum.core.commands.CommandInterface;
 import de.quantum.core.commands.CommandType;
-import de.quantum.core.events.EventReflector;
 import de.quantum.core.module.ModuleCommand;
-import de.quantum.core.utils.Utils;
-import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.OnlineStatus;
+import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -15,15 +12,11 @@ import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import net.dv8tion.jda.api.requests.GatewayIntent;
-import net.dv8tion.jda.api.utils.ConcurrentSessionController;
-import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.concurrent.Executors;
 
+@Slf4j
 @CommandAnnotation
 @ModuleCommand(moduleName = "CustomBot")
 public class CustomBotCommand implements CommandInterface<SlashCommandInteractionEvent> {
@@ -53,15 +46,14 @@ public class CustomBotCommand implements CommandInterface<SlashCommandInteractio
                         new OptionData(OptionType.STRING, "activity_name", "The activity name. Example: Playing <activity_name>", true),
                         new OptionData(OptionType.STRING, "activity_url", "The activity url. Supported by types: Watching, Streaming", false)
                 ),
-                new SubcommandData("status","Shows the Status of the current running custom-bots")
+                new SubcommandData("status", "Shows the Status of the current running custom-bots")
         );
     }
 
+
     @Override
     public void perform(SlashCommandInteractionEvent event) {
-        
-
-
+        log.info("Custom Bot event triggered from %s".formatted(event.getJDA().getSelfUser().getName()));
     }
 
     @Override

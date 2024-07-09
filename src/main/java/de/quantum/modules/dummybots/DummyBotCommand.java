@@ -4,6 +4,8 @@ import de.quantum.core.commands.CommandAnnotation;
 import de.quantum.core.commands.CommandInterface;
 import de.quantum.core.utils.AudioManagerUtils;
 import de.quantum.core.utils.CheckUtils;
+import de.quantum.core.utils.StatusUtils;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
@@ -17,8 +19,10 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -53,6 +57,12 @@ public class DummyBotCommand implements CommandInterface<SlashCommandInteraction
             event.getHook().editOriginal("This command does not work in DM-Chat").queue();
             return;
         }
+        assert event.getGuild() != null;
+        ArrayList<JDA> dummies = DummyBotManager.getInstance().getGuildDummyJdaInstances(event.getGuild().getId());
+        if (dummies.isEmpty()) {
+            event.getHook().editOriginal("There are no dummy bots in your guild. Please contact a bot admin!").queue();
+            return;
+        }
         String commandStatement = "";
         if (CheckUtils.checkNotNull(event.getSubcommandGroup())) {
             commandStatement += event.getSubcommandGroup() + "_";
@@ -75,9 +85,20 @@ public class DummyBotCommand implements CommandInterface<SlashCommandInteraction
 
 
     public void handleStatus(SlashCommandInteractionEvent event) {
+        assert event.getGuild() != null;
+        assert event.getMember() != null;
+        DummyBotManager.getInstance().getGuildDummyJdaInstances(event.getGuild().getId()).forEach((jda) -> {
+            Guild guild = jda.getGuildById(event.getGuild().getId());
+            assert guild != null;
+            StatusUtils statusUtils = DummyBotManager.getInstance().getStatusUtils();
+            MessageCreateBuilder messageCreateBuilder = statusUtils.getMessageCreateBuilderForPage(jda, guild, event.getMember());
+            event.getChannel().sendMessage(messageCreateBuilder.build()).queue(
+                    message -> message.delete().queueAfter(10, TimeUnit.MINUTES)
+            );
+        });
 
+        event.getHook().editOriginal("Sent Message Embeds, auto-deletes after 10min!").queue();
     }
-
 
     public void handleWrite(SlashCommandInteractionEvent event) {
         assert event.getGuild() != null;
@@ -169,6 +190,5 @@ public class DummyBotCommand implements CommandInterface<SlashCommandInteraction
         });
         event.getHook().editOriginal("Left Voice-Channels").queue();
     }
-
 
 }

@@ -1,6 +1,6 @@
 # QuantumBot
 
-QuantumBot is a Discord bot built with JDA (Java Discord API) to enhance your Discord server experience with intuitive features.
+QuantumBot is a Discord bot built with [JDA](https://jda.wiki/using-jda/getting-started/) (Java Discord API) to enhance your Discord server experience with intuitive features.
 
 ## Features
 
@@ -18,4 +18,5 @@ QuantumBot is a Discord bot built with JDA (Java Discord API) to enhance your Di
 - **/speed_dating stop**: Stops the Speed-dating System and cleans up the created channels.
 
 ## Support
+
 - **[Support Server](https://discord.gg/aWPJkkghwh)**

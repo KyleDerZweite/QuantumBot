@@ -6,6 +6,7 @@ import de.quantum.core.shutdown.ShutdownAnnotation;
 import de.quantum.core.shutdown.ShutdownInterface;
 import de.quantum.core.utils.CheckUtils;
 import de.quantum.core.utils.Secret;
+import de.quantum.core.utils.StatusUtils;
 import de.quantum.core.utils.Utils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,6 @@ import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.utils.ConcurrentSessionController;
 
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -26,6 +26,9 @@ public class DummyBotManager implements ShutdownInterface {
     @Getter
     private ConcurrentHashMap<String, ArrayList<JDA>> dummyBotsMap = null;
 
+    @Getter
+    private final StatusUtils statusUtils;
+
     private DummyBotManager() {
         if (INSTANCE != null) {
             throw new AssertionError(
@@ -33,6 +36,7 @@ public class DummyBotManager implements ShutdownInterface {
                             + DummyBotManager.class.getName()
                             + " class already exists, Can't create a new instance.");
         }
+        statusUtils = new StatusUtils("dummy_bot_status");
     }
 
     public static DummyBotManager getInstance() {
@@ -79,10 +83,6 @@ public class DummyBotManager implements ShutdownInterface {
 
     public ArrayList<JDA> getGuildDummyJdaInstances(String guildId) {
         return dummyBotsMap.get(guildId);
-    }
-
-    public boolean isDummyBot(String botId) {
-        return DatabaseManager.getInstance().getDummyBots().containsKey(botId);
     }
 
     public JDA getDummyBotJDA(String token) {
