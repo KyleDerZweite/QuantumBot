@@ -25,7 +25,7 @@ public class EmbedUtils {
 
 
     public static Button getMessageDeleteButton(String authorId) {
-        return Button.danger("delete_%s".formatted(authorId),":x:").asEnabled();
+        return Button.danger("delete_%s".formatted(authorId),"\u2716").asEnabled();
     }
 
 }

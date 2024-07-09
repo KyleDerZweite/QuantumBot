@@ -19,7 +19,7 @@ public class ButtonListener implements EventInterface<ButtonInteractionEvent> {
                 event.reply("You are not allowed to delete this message!").queue();
                 return;
             }
-            event.reply("Deleting Message...").queue();
+            event.reply("Deleting Message...").setEphemeral(true).queue();
             event.getMessage().delete().queue();
         }
     }

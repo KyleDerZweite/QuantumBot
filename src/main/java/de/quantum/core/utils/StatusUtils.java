@@ -218,7 +218,9 @@ public class StatusUtils {
     public MessageCreateBuilder getMessageCreateBuilderForPage(String buttonKey, @NotNull JDA jda, @NotNull Guild guild, @NotNull Member requestingMember) {
         MessageCreateBuilder messageBuilder = new MessageCreateBuilder();
         messageBuilder.setEmbeds(getStatusEmbedPage(buttonKey, jda, guild, requestingMember));
-        messageBuilder.setActionRow(getButtonsForPage(buttonKey));
+        LinkedList<Button> buttonsForPage = new LinkedList<>(List.of(getButtonsForPage(buttonKey)));
+        buttonsForPage.addLast(EmbedUtils.getMessageDeleteButton(requestingMember.getId()));
+        messageBuilder.setActionRow(buttonsForPage);
         return messageBuilder;
     }
 

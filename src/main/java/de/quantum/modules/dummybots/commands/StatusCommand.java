@@ -33,9 +33,9 @@ public class StatusCommand implements CommandInterface<SlashCommandInteractionEv
             StatusUtils statusUtils = DummyBotManager.getInstance().getStatusUtils();
             MessageCreateBuilder messageCreateBuilder = statusUtils.getMessageCreateBuilderForPage(event.getJDA(), event.getGuild(), event.getMember());
             event.getChannel().sendMessage(messageCreateBuilder.build()).queue(
-                    message -> message.delete().queueAfter(10, TimeUnit.MINUTES)
+                    message -> message.delete().queueAfter(2, TimeUnit.MINUTES)
             );
-            event.getHook().editOriginal("Sent Status Embed, deleting after 10min").queue();
+            event.getHook().editOriginal("Sent Status Embed, deleting after 2min").queue();
         } catch (Exception e) {
             event.getHook().editOriginal("Got Error: %s".formatted(e)).queue();
         }

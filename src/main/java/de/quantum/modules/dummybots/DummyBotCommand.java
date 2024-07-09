@@ -2,6 +2,7 @@ package de.quantum.modules.dummybots;
 
 import de.quantum.core.commands.CommandAnnotation;
 import de.quantum.core.commands.CommandInterface;
+import de.quantum.core.module.ModuleCommand;
 import de.quantum.core.utils.AudioManagerUtils;
 import de.quantum.core.utils.CheckUtils;
 import de.quantum.core.utils.StatusUtils;
@@ -28,6 +29,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 @CommandAnnotation
+@ModuleCommand(moduleName = "DummyBot")
 public class DummyBotCommand implements CommandInterface<SlashCommandInteractionEvent> {
 
     @Override

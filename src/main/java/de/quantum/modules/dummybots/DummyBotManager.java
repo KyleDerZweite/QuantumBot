@@ -2,6 +2,7 @@ package de.quantum.modules.dummybots;
 
 import de.quantum.core.database.DatabaseManager;
 import de.quantum.core.events.EventReflector;
+import de.quantum.core.module.ModuleAnnotation;
 import de.quantum.core.shutdown.ShutdownAnnotation;
 import de.quantum.core.shutdown.ShutdownInterface;
 import de.quantum.core.utils.CheckUtils;
@@ -20,6 +21,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @ShutdownAnnotation
+@ModuleAnnotation(
+        moduleName = "DummyBot",
+        moduleDescription = "DummyBots feature - Access, request only!",
+        moduleVersion = "v0.0.1",
+        moduleAuthorName = "kylederzweite",
+        moduleAuthorID = "378542649579143188"
+)
 public class DummyBotManager implements ShutdownInterface {
     private static volatile DummyBotManager INSTANCE = null;
 

@@ -2,14 +2,21 @@ package de.quantum.modules.dummybots;
 
 import de.quantum.core.events.EventAnnotation;
 import de.quantum.core.events.EventInterface;
+import de.quantum.core.module.ModuleEvent;
+import de.quantum.core.utils.EmbedUtils;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
+
+import java.util.LinkedList;
+import java.util.List;
 
 @Slf4j
 @EventAnnotation
+@ModuleEvent(moduleName = "DummyBot")
 public class DummyBotListener implements EventInterface<ButtonInteractionEvent> {
 
     @Override
@@ -38,11 +45,11 @@ public class DummyBotListener implements EventInterface<ButtonInteractionEvent> 
 
             MessageEmbed messageEmbed = DummyBotManager.getInstance().getStatusUtils().getStatusEmbedPage(buttonId, event.getJDA(), event.getGuild(), event.getMember());
             Button[] buttons = DummyBotManager.getInstance().getStatusUtils().getButtonsForPage(buttonId);
-
+            LinkedList<Button> buttonsForPage = new LinkedList<>(List.of(buttons));
+            buttonsForPage.addLast(EmbedUtils.getMessageDeleteButton(event.getMember().getId()));
             messageEditBuilder
                     .setEmbeds(messageEmbed)
-                    .setActionRow(buttons);
-
+                    .setActionRow(buttonsForPage);
             event.editMessage(messageEditBuilder.build()).queue();
 
         } catch (AssertionError e) {
