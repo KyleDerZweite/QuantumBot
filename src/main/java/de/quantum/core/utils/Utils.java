@@ -9,12 +9,10 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.interactions.InteractionHook;
-
+import java.nio.file.Paths;
 import java.awt.Color;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.concurrent.TimeUnit;
 
@@ -26,6 +24,9 @@ public class Utils {
     public static final int TOTAL_SHARDS = 2;
 
     public static final String SUPPORT_GUILD_ID = "1255944449700270201";
+
+    public static final Locale GERMAN = new Locale("de");
+    public static final Locale ENGLISH = new Locale("en");
 
     /*
     public static void registerEventListener(JDA jda) {
@@ -115,5 +116,11 @@ public class Utils {
         return String.format("%dd %dh %dm %ds", days, hours, minutes, seconds);
     }
 
-
+    public static String getResourcePath(String resource) {
+        try {
+            return Paths.get(Objects.requireNonNull(Utils.class.getClassLoader().getResource(resource)).toURI()).toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Error retrieving resource path for: " + resource, e);
+        }
+    }
 }

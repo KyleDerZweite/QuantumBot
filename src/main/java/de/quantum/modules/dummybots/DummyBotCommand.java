@@ -2,6 +2,7 @@ package de.quantum.modules.dummybots;
 
 import de.quantum.core.commands.CommandAnnotation;
 import de.quantum.core.commands.CommandInterface;
+import de.quantum.core.commands.CommandType;
 import de.quantum.core.module.ModuleCommand;
 import de.quantum.core.utils.AudioManagerUtils;
 import de.quantum.core.utils.CheckUtils;
@@ -55,10 +56,6 @@ public class DummyBotCommand implements CommandInterface<SlashCommandInteraction
 
     @Override
     public void perform(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild()) {
-            event.getHook().editOriginal("This command does not work in DM-Chat").queue();
-            return;
-        }
         assert event.getGuild() != null;
         ArrayList<JDA> dummies = DummyBotManager.getInstance().getGuildDummyJdaInstances(event.getGuild().getId());
         if (dummies.isEmpty()) {
@@ -83,6 +80,11 @@ public class DummyBotCommand implements CommandInterface<SlashCommandInteraction
     @Override
     public Permission[] getPermissions() {
         return new Permission[]{Permission.MODERATE_MEMBERS};
+    }
+
+    @Override
+    public CommandType getType() {
+        return CommandType.GUILD_ONLY;
     }
 
 

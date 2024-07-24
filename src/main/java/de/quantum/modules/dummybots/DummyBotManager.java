@@ -16,6 +16,8 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.utils.ConcurrentSessionController;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -68,7 +70,7 @@ public class DummyBotManager implements ShutdownInterface {
 
     public void startAll() {
         dummyBotsMap = new ConcurrentHashMap<>();
-        DatabaseManager.getInstance().getDummyBots().forEach((guildId, dummyBotsArray) -> {
+        getDummyBots().forEach((guildId, dummyBotsArray) -> {
             ArrayList<JDA> jdaList = new ArrayList<>();
             dummyBotsArray.forEach((token) -> {
                 JDA jda = getDummyBotJDA(token);
@@ -85,6 +87,7 @@ public class DummyBotManager implements ShutdownInterface {
         dummyBotsMap.forEach((guildId, jdaList) -> jdaList.forEach((jda) -> {
             jda.getPresence().setPresence(OnlineStatus.OFFLINE, null);
             jda.shutdown();
+            log.debug("Shutting down {}", Utils.getJdaShardGuildCountString(jda));
             jda.shutdownNow();
         }));
     }
@@ -106,13 +109,55 @@ public class DummyBotManager implements ShutdownInterface {
     public void shutdown() {
         if (CheckUtils.checkNotNull(dummyBotsMap)) {
             log.warn("Shutting down dummy bots");
-            dummyBotsMap.forEach((guildId, jdaList) -> jdaList.forEach((jda) -> {
-                jda.getPresence().setPresence(OnlineStatus.OFFLINE, null);
-                log.info("Shutting down {}", Utils.getJdaShardGuildCountString(jda));
-                jda.shutdown();
-            }));
+            stopAll();
             this.dummyBotsMap = null;
             log.info("Shutting down completed");
         }
     }
+
+    public ConcurrentHashMap<String, ArrayList<String>> getDummyBots() {
+        ResultSet rs = DatabaseManager.getInstance().selectFrom("*", "dummy_bots");
+        if (CheckUtils.checkNull(rs)) {
+            return null;
+        }
+
+        ConcurrentHashMap<String, ArrayList<String>> guildDummyTokenMap = new ConcurrentHashMap<>();
+        try {
+            while (rs.next()) {
+                String guildId = rs.getString("guild_id");
+                if (!guildDummyTokenMap.containsKey(guildId)) {
+                    guildDummyTokenMap.put(guildId, new ArrayList<>());
+                }
+                ArrayList<String> tokens = guildDummyTokenMap.get(guildId);
+                String botId = rs.getString("bot_id");
+                ResultSet botTokenSet = DatabaseManager.getInstance().selectFromWhere("token", "bots", "bot_id", botId);
+                if (botTokenSet.next()) {
+                    String botToken = botTokenSet.getString("token");
+                    tokens.add(botToken);
+                }
+                botTokenSet.close();
+            }
+            rs.close();
+        } catch (SQLException e) {
+            log.error(e.getMessage(), e);
+        }
+        return guildDummyTokenMap;
+    }
+
+    public boolean isDummyBot(String botId) {
+        ResultSet rs = DatabaseManager.getInstance().selectFromWhere("*", "dummy_bots", "bot_id", botId);
+        if (CheckUtils.checkNull(rs)) {
+            return false;
+        }
+        try {
+            if (rs.next()) {
+                return true;
+            }
+        } catch (SQLException e) {
+            log.debug(e.getMessage(), e);
+        }
+        return false;
+    }
+
+
 }

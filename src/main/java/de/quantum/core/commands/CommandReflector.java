@@ -20,20 +20,23 @@ public class CommandReflector implements EventInterface<GenericCommandInteractio
 
     @Override
     public void perform(GenericCommandInteractionEvent event) {
+        event.deferReply(true).queue();
         if (CommandManager.getInstance().getCommandHashMap().containsKey(event.getCommandId())) {
             CommandInterface<? extends GenericCommandInteractionEvent> cmdController = CommandManager.getInstance().getCommandHashMap().get(event.getCommandId());
-            if (event.getMember() == null) {
+
+            if (!cmdController.getType().isDmEnabled() && !event.isFromGuild()) {
+                event.getHook().editOriginal("This command cannot be run in the direct messages!").queue();
                 return;
             }
-            event.deferReply(true).queue();
 
             Permission[] requiredPerms = cmdController.getPermissions();
             ArrayList<Permission> missingPermissions = CheckUtils.getMissingPermissions(event.getJDA(), event.getMember(), event.getGuildChannel(), requiredPerms);
 
-            if (!missingPermissions.isEmpty()) {
-                ErrorManager.replyInteraction(event.getHook(), "You do not have permission to use this command.");
+            if (missingPermissions != null && !missingPermissions.isEmpty()) {
+                event.getHook().editOriginal("You do not have permission to use this command!").queue();
                 return;
             }
+
             //    ConcurrentHashMap<Long, ConcurrentHashMap<String,Long>> cmdCooldownMap = CommandManager.cmdCooldownMap;
             //    ConcurrentHashMap<String,Long> memberCooldownMap = new ConcurrentHashMap<>();
             //    long currentEpochSeconds = new Date().toInstant().getEpochSecond();
@@ -51,6 +54,8 @@ public class CommandReflector implements EventInterface<GenericCommandInteractio
             //    }
             //    memberCooldownMap.put(event.getMember().getId(),currentEpochSeconds);
             //    cmdCooldownMap.put(event.getCommandIdLong(),memberCooldownMap);
+
+
             try {
                 Method m = cmdController.getClass().getDeclaredMethod("perform", GenericCommandInteractionEvent.class);
                 m.invoke(cmdController, event);
@@ -58,11 +63,8 @@ public class CommandReflector implements EventInterface<GenericCommandInteractio
                 log.error(e.getMessage(), e);
             }
         } else {
-            if (event.getGuild() == null) {
-                //TODO
-                return;
-            }
-            //TODO
+            event.reply("This command does not exist!").setEphemeral(true).queue();
+            //TODO maybe add an option to show other error message if its disabled or more specific fail cases...
         }
     }
 }

@@ -23,7 +23,7 @@ public class ModuleManager {
     private static final long ALLOWED_PERMISSION_OFFSET = 590435596631761L;
 
     @Getter
-    private final ConcurrentHashMap<String, ModuleRecord> moduleHashMap;
+    private final ConcurrentHashMap<String, String> moduleHashMap;
 
     private ModuleManager() {
         if (INSTANCE != null) {
@@ -45,7 +45,8 @@ public class ModuleManager {
         }
         return INSTANCE;
     }
-
+    public void init() {}
+    /*
     public void init() {
         loadModules();
         loadModuleCommands();
@@ -114,6 +115,6 @@ public class ModuleManager {
         String moduleVersion = clazz.getAnnotation(ModuleAnnotation.class).moduleVersion();
         return new ModuleRecord(moduleName, moduleDescription, moduleAuthorName, moduleAuthorID, moduleVersion);
     }
-
+    */
 
 }

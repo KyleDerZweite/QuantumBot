@@ -1,5 +1,6 @@
 package de.quantum.core;
 
+import de.quantum.core.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Locale;
@@ -13,7 +14,7 @@ public class LanguageManager {
 
     private static final String[] LANG_KEYS = new String[]{"en", "de"};
 
-    private static final Locale DEFAULT_LOCALE = Locale.ENGLISH;
+    private static final Locale DEFAULT_LOCALE = Utils.ENGLISH;
 
     public static void loadLanguages() {
         LANGUAGES.clear();
