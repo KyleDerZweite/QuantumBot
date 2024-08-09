@@ -15,7 +15,7 @@ out/
 src/main/resources/database.properties
 src/main/resources/dummy_token.properties
 logs/*
-
+class_archive/*
 
 
 ### Eclipse ###
