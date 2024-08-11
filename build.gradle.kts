@@ -32,6 +32,10 @@ dependencies {
     implementation("org.postgresql:postgresql:42.7.2")
 }
 
+tasks.withType<JavaCompile> {
+    options.encoding = "UTF-8"
+}
+
 tasks.test {
     useJUnitPlatform()
 }

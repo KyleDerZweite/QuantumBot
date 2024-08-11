@@ -1,11 +1,11 @@
 package de.quantum.listener;
 
+import de.quantum.core.ShardMan;
 import de.quantum.core.commands.CommandManager;
 import de.quantum.core.events.EventAnnotation;
 import de.quantum.core.events.EventInterface;
 import de.quantum.core.utils.CheckUtils;
 import de.quantum.core.utils.Utils;
-import de.quantum.modules.dummybots.DummyBotManager;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
@@ -23,6 +23,7 @@ public class OnReadyListener implements EventInterface<ReadyEvent> {
             event.getJDA().shutdownNow();
             return;
         }
+        ShardMan.getInstance().getJdaInstanceHashMap().put(event.getJDA().getSelfUser().getId(), event.getJDA());
         log.info("Registering Commands for {}", Utils.getJdaShardGuildCountString(event.getJDA()));
         CommandManager.getInstance().registerCommands(event.getJDA());
         log.info("Deleting unused Commands for {}", Utils.getJdaShardGuildCountString(event.getJDA()));

@@ -11,7 +11,7 @@ public class EmbedUtils {
     private static EmbedBuilder getEmbedBuilder() {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTimestamp(Instant.now());
-        eb.setFooter("☆ Quantum ☆", "https://cdn.discordapp.com/avatars/973526417595846696/10fa31a2e9ed6df0da2ef8b1ed6a9135.png?size=1024&format=webp&quality=lossless&width=0&height=384");
+        eb.setFooter("☆ Quantum ☆", "https://cdn.discordapp.com/avatars/973526417595846696/35c5751aa0a8a11f984f44baefa84e53.png?size=4096");
         return eb;
     }
 

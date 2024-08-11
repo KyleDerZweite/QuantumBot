@@ -15,9 +15,9 @@ import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
 import net.dv8tion.jda.api.sharding.ShardManager;
 import net.dv8tion.jda.api.utils.ConcurrentSessionController;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 
 @Slf4j
@@ -27,8 +27,10 @@ public class ShardMan extends ListenerAdapter implements ShutdownInterface {
     private static volatile ShardMan INSTANCE = null;
 
     @Getter
-    @Nullable
     private ShardManager shardManager;
+
+    @Getter
+    private final ConcurrentHashMap<String, JDA> jdaInstanceHashMap;
 
     private ShardMan() {
         if (CheckUtils.checkNotNull(INSTANCE)) {
@@ -49,11 +51,16 @@ public class ShardMan extends ListenerAdapter implements ShutdownInterface {
                 .setShardsTotal(Utils.TOTAL_SHARDS)
                 .addEventListeners(new EventReflector());
         this.shardManager = builder.build();
+        this.jdaInstanceHashMap = new ConcurrentHashMap<>();
     }
 
     public static ShardMan getInstance() {
         init();
         return INSTANCE;
+    }
+
+    public JDA getJDAInstance(String botId) {
+        return jdaInstanceHashMap.get(botId);
     }
 
     public static void init() {
@@ -77,6 +84,7 @@ public class ShardMan extends ListenerAdapter implements ShutdownInterface {
             }
             this.shardManager.shutdown();
             this.shardManager = null;
+            this.jdaInstanceHashMap.clear();
             log.info("Shutting down completed");
         }
     }
