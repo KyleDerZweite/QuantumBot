@@ -1,25 +1,29 @@
 package de.quantum.modules.audit;
 
-import de.quantum.core.ShardMan;
 import de.quantum.core.database.DatabaseManager;
+import de.quantum.core.entities.TimeoutMap;
 import de.quantum.core.shutdown.ShutdownAnnotation;
 import de.quantum.core.shutdown.ShutdownInterface;
 import de.quantum.core.utils.CheckUtils;
+import de.quantum.core.utils.Secret;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import net.dv8tion.jda.api.audit.TargetType;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildChannel;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @ShutdownAnnotation
 public class AuditHandler implements ShutdownInterface {
 
-    public static final String TABLE_NAME = "audit_entries";
+    public static final String AUDIT_BUTTON_ID = "audit";
 
     private static volatile AuditHandler INSTANCE = null;
 
@@ -36,7 +40,10 @@ public class AuditHandler implements ShutdownInterface {
      * This structure allows efficient storage and retrieval of audit logs by their guild and log ID.
      */
     @Getter
-    private final ConcurrentHashMap<String, ConcurrentHashMap<String, LogEntry>> guildAuditLogCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ConcurrentHashMap<String, LogEntry>> guildAuditLogCache;
+
+    @Getter
+    private final TimeoutMap<String, AuditRequest> activeAuditRequests;
 
     private AuditHandler() {
         if (INSTANCE != null) {
@@ -45,6 +52,8 @@ public class AuditHandler implements ShutdownInterface {
                             + AuditHandler.class.getName()
                             + " class already exists, Can't create a new instance.");
         }
+        guildAuditLogCache = new ConcurrentHashMap<>();
+        activeAuditRequests = new TimeoutMap<>();
     }
 
     public static AuditHandler getInstance() {
@@ -85,6 +94,10 @@ public class AuditHandler implements ShutdownInterface {
         return hexLongId;
     }
 
+    private void onAuditRequestRemoved(String key, AuditRequest value) {
+        // your code here
+    }
+
     public List<LogEntry> getSimpleFilteredLogEntries(@NotNull String guildId, String memberId, String targetId, Integer actionTypeId, Integer targetTypeOrdinal) {
         return getSimpleFilteredLogEntries(guildId, memberId, targetId, actionTypeId, targetTypeOrdinal, 100);
     }
@@ -116,15 +129,44 @@ public class AuditHandler implements ShutdownInterface {
         getAuditLogCache(guild.getId()).put(logEntry.getQid(), logEntry);
     }
 
+    public String getTargetString(Guild guild, TargetType targetType, String targetId) {
+        return switch (targetType) {
+            case MEMBER, INTEGRATION -> Objects.requireNonNull(guild.getMemberById(targetId)).getAsMention();
+            case ROLE -> Objects.requireNonNull(guild.getRoleById(targetId)).getAsMention();
+            case CHANNEL ->
+                    Objects.requireNonNull(guild.getChannelById(StandardGuildChannel.class, targetId)).getAsMention();
+            case GUILD -> guild.getName();
+            case INVITE -> "Invite";
+            case WEBHOOK ->
+                    guild.retrieveWebhooks().submit().join().stream().filter(webhook -> webhook.getId().equals(targetId)).toList().get(0).getName();
+            case EMOJI -> Objects.requireNonNull(guild.getEmojiById(targetId)).getAsMention();
+            case STAGE_INSTANCE -> "Stage";
+            case STICKER ->
+                    guild.retrieveStickers().submit().join().stream().filter(sticker -> sticker.getId().equals(targetId)).toList().get(0).getName();
+            case THREAD -> Objects.requireNonNull(guild.getThreadChannelById(targetId)).getAsMention();
+            case SCHEDULED_EVENT -> Objects.requireNonNull(guild.getScheduledEventById(targetId)).getName();
+            case AUTO_MODERATION_RULE -> guild.retrieveAutoModRuleById(targetId).submit().join().getName();
+            default -> "Unknown";
+        };
+    }
+
     @Override
     public void shutdown() {
         guildAuditLogCache.forEach((guildId, auditLogCache) -> {
             auditLogCache.forEach((qid, logEntry) -> {
-                // Output the log string (or export to a database)
                 System.out.println(logEntry.toString());
-                // Example of exporting to a database:
                 // db.insertAuditLogEntry(shardId, timestamp, userId, userName, actionType.name(), targetId, targetName, reason, finalLogString);
             });
         });
+        activeAuditRequests.shutdown();
     }
+
+    public String getAuditRequestId() {
+        String rId = Secret.getRandomIdentifier(6);
+        while (activeAuditRequests.containsKey(rId)) {
+            rId = Secret.getRandomIdentifier(6);
+        }
+        return rId;
+    }
+
 }

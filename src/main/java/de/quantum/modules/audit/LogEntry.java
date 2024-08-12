@@ -1,20 +1,20 @@
 package de.quantum.modules.audit;
 
+import de.quantum.core.utils.StringUtils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.audit.*;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.Webhook;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Getter
 @AllArgsConstructor
@@ -27,7 +27,7 @@ public class LogEntry {
     public LogEntry(AuditLogEntry auditLogEntry) {
         this.qid = AuditHandler.getInstance().getQidLogCounter();
         this.auditLogEntry = auditLogEntry;
-        this.epochSecond = System.currentTimeMillis();
+        this.epochSecond = auditLogEntry.getTimeCreated().toEpochSecond();
     }
 
     public LogEntry(String qid, AuditLogEntry auditLogEntry) {
@@ -59,6 +59,11 @@ public class LogEntry {
     @Nullable
     public User getUser() {
         return auditLogEntry.getUser();
+    }
+
+    @Nullable
+    public Member getMember() {
+        return getGuild().getMemberById(getUserId());
     }
 
     @Nullable
@@ -125,49 +130,38 @@ public class LogEntry {
         return auditLogEntry.getTargetType();
     }
 
-    @Override
-    public String toString() {
-        int shardId = getJDA().getShardInfo().getShardId();
-        String userId = getUserId();
-        String targetId = getTargetId();
-        ActionType actionType = getType(); // Human-readable action type
-        String reason = getReason();
-
-        // Convert epochMillis to a readable date/time string
-        String timestamp = Instant.ofEpochSecond(getEpochSecond())
-                .atZone(ZoneId.systemDefault())
-                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-
-        // Start constructing the log entry string
-        StringBuilder logString = new StringBuilder();
-        logString.append("[").append(timestamp).append("] ")
-                .append("Shard ID: ").append(shardId).append(" | ")
-                .append(actionType.name()).append(" ").append(" | ")
-                .append("User: ").append(userId).append(" | ")
-                .append("Target: ").append(targetId);
-
-        // Append reason if available
-        if (reason != null && !reason.isEmpty()) {
-            logString.append(" | Reason: ").append(reason);
-        }
-
+    public String getFieldValue() {
         // Handle changes (if any)
         Map<String, AuditLogChange> changeMap = getChanges();
+        StringBuilder changes = new StringBuilder();
         if (!changeMap.isEmpty()) {
-            logString.append(" | Changes: ");
             for (AuditLogChange change : changeMap.values()) {
-                String key = change.getKey();
-                Object oldValue = change.getOldValue();
+                String key = change.getKey().replace("$", "");
                 Object newValue = change.getNewValue();
-                logString.append("[").append(key).append(": ")
-                        .append(oldValue != null ? oldValue : "[None]")
-                        .append(" -> ")
-                        .append(newValue != null ? newValue : "None")
-                        .append("] ");
+                changes.append(key).append(": ")
+                        .append(newValue != null ? newValue : "None");
             }
         }
 
-        // Final log entry string
-        return logString.toString();
+        return """
+                `Member   `: %s (%s)
+                `Target   `: %s (%s)
+                `Action   `: %s
+                `Change   `: %s
+                `Reason   `: %s
+                `Timestamp`: <t:%s:R>
+                """.formatted(
+                Objects.requireNonNull(getMember()).getAsMention(), getUserId(),
+                AuditHandler.getInstance().getTargetString(getGuild(), getTargetType(), getTargetId()), getTargetId(),
+                StringUtils.convertUpperCaseToTitleCase(getType().name()),
+                changes,
+                getReason() != null ? getReason() : "n/a",
+                epochSecond
+        );
+    }
+
+    @Override
+    public String toString() {
+        return "LogEntry(qid=%s, id=%s)".formatted(qid, auditLogEntry.getId());
     }
 }

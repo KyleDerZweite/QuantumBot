@@ -7,8 +7,12 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Random;
 
 public class Secret {
+
+    public static final String CHARSET = "UTF-8";
+    public static final String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     public static String encrypt(String plaintext) {
         return encrypt(plaintext, Utils.getEncryptKey());
@@ -41,4 +45,14 @@ public class Secret {
             return ciphertext;
         }
     }
+
+    public static String getRandomIdentifier(int length) {
+        StringBuilder identifier = new StringBuilder();
+        Random random = new Random();
+        for (int i = 0; i < length; i++) {
+            identifier.append(CHARS.charAt(random.nextInt(CHARS.length())));
+        }
+        return identifier.toString();
+    }
+
 }
