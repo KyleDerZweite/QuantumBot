@@ -90,4 +90,9 @@ public class CheckUtils {
         return false;
     }
 
+    @CheckReturnValue
+    public static boolean isDigit(String s) {
+        return s.matches("\\d+");
+    }
+
 }

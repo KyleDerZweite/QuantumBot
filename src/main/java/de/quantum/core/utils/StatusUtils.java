@@ -165,6 +165,21 @@ public class StatusUtils {
         int page = getPageFromButtonKey(buttonKey);
         EmbedBuilder embedBuilder = getBaseEmbedBuilder(bot, selfMember, requestingMember);
         switch (page) {
+            case 1 -> setEmbedBuilderPageOne(embedBuilder, selfMember, guild);
+            case 2 -> {
+                // Bot Roles
+                List<Role> roles = selfMember.getRoles();
+                embedBuilder.addField("Roles %d/%d (%.1f%%)".formatted(roles.size(), guild.getRoles().size(), Utils.calculatePercentage(roles.size(), guild.getRoles().size())), roles.stream()
+                        .map(Role::getAsMention)
+                        .collect(Collectors.joining(", ")), false);
+            }
+            case 3 -> {
+                // Bot Permissions
+                EnumSet<Permission> memberPermissions = selfMember.getPermissions();
+                EnumSet<Permission> allPermissions = Permission.getPermissions(Permission.getRaw(Permission.values()));
+                String permissionsValue = getPermissionsValue(memberPermissions, allPermissions);
+                embedBuilder.addField("Permissions %d/%d (%.1f%%)".formatted(memberPermissions.size(), allPermissions.size(), Utils.calculatePercentage(memberPermissions.size(), allPermissions.size())), permissionsValue, false);
+            }
             default -> {
                 // Owner Info
                 Member owner = guild.retrieveOwner().complete();
@@ -183,21 +198,6 @@ public class StatusUtils {
                         .addField("Bot Join Date", selfMember.getTimeJoined().toString(), false)
                         .addField("Latency", gatewayPing + " ms", true)
                         .addField("Uptime", Utils.formatUptime(uptimeMillis), true);
-            }
-            case 1 -> setEmbedBuilderPageOne(embedBuilder, selfMember, guild);
-            case 2 -> {
-                // Bot Roles
-                List<Role> roles = selfMember.getRoles();
-                embedBuilder.addField("Roles %d/%d (%.1f%%)".formatted(roles.size(), guild.getRoles().size(), Utils.calculatePercentage(roles.size(), guild.getRoles().size())), roles.stream()
-                        .map(Role::getAsMention)
-                        .collect(Collectors.joining(", ")), false);
-            }
-            case 3 -> {
-                // Bot Permissions
-                EnumSet<Permission> memberPermissions = selfMember.getPermissions();
-                EnumSet<Permission> allPermissions = Permission.getPermissions(Permission.ALL_PERMISSIONS);
-                String permissionsValue = getPermissionsValue(memberPermissions, allPermissions);
-                embedBuilder.addField("Permissions %d/%d (%.1f%%)".formatted(memberPermissions.size(), allPermissions.size(), Utils.calculatePercentage(memberPermissions.size(), allPermissions.size())), permissionsValue, false);
             }
         }
         return embedBuilder.build();

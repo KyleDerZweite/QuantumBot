@@ -19,23 +19,26 @@ public class AuditButtonListener implements EventInterface<ButtonInteractionEven
         String action = buttonArgs[2];
 
         AuditRequest auditRequest = AuditHandler.getInstance().getActiveAuditRequests().get(requestId);
+        if (auditRequest == null) {
+            event.getMessage().delete().queue();
+            event.reply("Message timeout, please request a new audit request.").setEphemeral(true).queue();
+            return;
+        }
 
         switch (action) {
             case "next" -> {
                 auditRequest.next();
                 event.deferEdit().queue();
-                event.reply("Showing next :check_mark:").queue();
             }
             case "previous" -> {
                 auditRequest.previous();
-                event.reply("Showing previous :check_mark:").queue();
+                event.deferEdit().queue();
             }
-            case "edit-filter" -> {
-                event.reply("Attempting to change").queue();
-            }
-            default -> event.reply("Unknown button Interaction, please contact a bot admin!").queue();
-        }
+            case "edit-filter" -> event.replyModal(auditRequest.getChangeFilterModal()).queue();
+            default ->
+                    event.reply("Unknown button Interaction, please contact a bot admin!").setEphemeral(true).queue();
 
+        }
     }
 
 }

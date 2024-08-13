@@ -1,20 +1,20 @@
 package de.quantum.modules.audit;
 
-import de.quantum.core.database.DatabaseManager;
+import de.quantum.core.entities.EmptyMentionable;
 import de.quantum.core.entities.TimeoutMap;
 import de.quantum.core.shutdown.ShutdownAnnotation;
 import de.quantum.core.shutdown.ShutdownInterface;
-import de.quantum.core.utils.CheckUtils;
 import de.quantum.core.utils.Secret;
+import de.quantum.core.utils.StringUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.audit.TargetType;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.IMentionable;
 import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildChannel;
+import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import org.jetbrains.annotations.NotNull;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,7 +27,7 @@ public class AuditHandler implements ShutdownInterface {
 
     private static volatile AuditHandler INSTANCE = null;
 
-    private Long qidLogCounter = null;
+    private Long qidLogCounter;
 
     /**
      * A concurrent cache for storing audit log entries.
@@ -54,6 +54,7 @@ public class AuditHandler implements ShutdownInterface {
         }
         guildAuditLogCache = new ConcurrentHashMap<>();
         activeAuditRequests = new TimeoutMap<>();
+        qidLogCounter = 0L;
     }
 
     public static AuditHandler getInstance() {
@@ -67,52 +68,32 @@ public class AuditHandler implements ShutdownInterface {
         return INSTANCE;
     }
 
-    public void getAllAuditLogs() {
-        ResultSet rs = DatabaseManager.getInstance().selectFrom("*", "audit_log");
-        try {
-            while (rs.next()) {
-                // pass
-            }
-        } catch (SQLException e) {
-            log.error(e.getMessage());
-        }
-    }
-
-
-    public void loadQidLogCounter() {
-        qidLogCounter = 0L;
-        //TODO load from db
-    }
-
     public String getQidLogCounter() {
-        if (CheckUtils.checkNull(qidLogCounter)) {
-            loadQidLogCounter();
-        }
-
         String hexLongId = Long.toHexString(qidLogCounter); // 16 characters wide for long
         qidLogCounter++;
         return hexLongId;
     }
 
-    private void onAuditRequestRemoved(String key, AuditRequest value) {
-        // your code here
+    public List<LogEntry> getFilteredLogEntries(@NotNull String guildId, String memberId, String targetId, Integer actionTypeId, Integer targetTypeOrdinal, String keyword) {
+        return getFilteredLogEntries(guildId, memberId, targetId, actionTypeId, targetTypeOrdinal, keyword, 100);
     }
 
-    public List<LogEntry> getSimpleFilteredLogEntries(@NotNull String guildId, String memberId, String targetId, Integer actionTypeId, Integer targetTypeOrdinal) {
-        return getSimpleFilteredLogEntries(guildId, memberId, targetId, actionTypeId, targetTypeOrdinal, 100);
-    }
-
-    public List<LogEntry> getSimpleFilteredLogEntries(@NotNull String guildId, String memberId, String targetId, Integer actionTypeId, Integer targetTypeOrdinal, int amount) {
+    public List<LogEntry> getFilteredLogEntries(@NotNull String guildId, String memberId, String targetId, Integer actionTypeId, Integer targetTypeOrdinal, String keyword, int amount) {
         return getAuditLogCache(guildId).values().stream()
                 .filter(entry -> {
                     if (memberId != null && !entry.getUserId().equals(memberId)) return false;
                     if (targetId != null && !entry.getTargetId().equals(targetId)) return false;
                     if (actionTypeId != null && entry.getTypeRaw() != actionTypeId) return false;
+                    if (keyword != null && !checkEntryForKeyword(keyword)) return false;
                     if (targetTypeOrdinal != null && entry.getTargetType().ordinal() != targetTypeOrdinal) return false;
                     return true;
                 })
                 .limit(amount)
                 .toList();
+    }
+
+    public boolean checkEntryForKeyword(String keyword) {
+        return true; //TODO implement keyword search, not to sure anymore what to do with it but gonna see...
     }
 
     public ConcurrentHashMap<String, LogEntry> getAuditLogCache(String guildId) {
@@ -139,7 +120,13 @@ public class AuditHandler implements ShutdownInterface {
             case INVITE -> "Invite";
             case WEBHOOK ->
                     guild.retrieveWebhooks().submit().join().stream().filter(webhook -> webhook.getId().equals(targetId)).toList().get(0).getName();
-            case EMOJI -> Objects.requireNonNull(guild.getEmojiById(targetId)).getAsMention();
+            case EMOJI -> {
+                try {
+                    yield Objects.requireNonNull(guild.getEmojiById(targetId)).getAsMention();
+                } catch (NullPointerException e) {
+                    yield "Emoji";
+                }
+            }
             case STAGE_INSTANCE -> "Stage";
             case STICKER ->
                     guild.retrieveStickers().submit().join().stream().filter(sticker -> sticker.getId().equals(targetId)).toList().get(0).getName();
@@ -150,14 +137,33 @@ public class AuditHandler implements ShutdownInterface {
         };
     }
 
+    public IMentionable getTarget(Guild guild, TargetType targetType, String targetId) {
+        return switch (targetType) {
+            case MEMBER, INTEGRATION -> guild.getMemberById(targetId);
+            case ROLE -> guild.getRoleById(targetId);
+            case CHANNEL -> guild.getChannelById(StandardGuildChannel.class, targetId);
+            case EMOJI -> {
+                try {
+                    yield guild.getEmojiById(targetId);
+                } catch (NullPointerException e) {
+                    yield new EmptyMentionable(targetId, targetType);
+                }
+            }
+            case THREAD -> guild.getThreadChannelById(targetId);
+            default -> new EmptyMentionable(targetId, targetType);
+        };
+    }
+
+    public IMentionable getTarget(Guild guild, int targetType, String targetId) {
+        return getTarget(guild, getTargetTypeByOrdinal(targetType), targetId);
+    }
+
+    public TargetType getTargetTypeByOrdinal(int targetOrdinal) {
+        return TargetType.values()[targetOrdinal];
+    }
+
     @Override
     public void shutdown() {
-        guildAuditLogCache.forEach((guildId, auditLogCache) -> {
-            auditLogCache.forEach((qid, logEntry) -> {
-                System.out.println(logEntry.toString());
-                // db.insertAuditLogEntry(shardId, timestamp, userId, userName, actionType.name(), targetId, targetName, reason, finalLogString);
-            });
-        });
         activeAuditRequests.shutdown();
     }
 
@@ -167,6 +173,14 @@ public class AuditHandler implements ShutdownInterface {
             rId = Secret.getRandomIdentifier(6);
         }
         return rId;
+    }
+
+    public StringSelectMenu getTargetTypesMenu() {
+        StringSelectMenu.Builder menuBuilder = StringSelectMenu.create("target-type-select");
+        for (TargetType value : TargetType.values()) {
+            menuBuilder.addOption(StringUtils.convertUpperCaseToTitleCase(value.name()), String.valueOf(value.ordinal()));
+        }
+        return menuBuilder.build();
     }
 
 }

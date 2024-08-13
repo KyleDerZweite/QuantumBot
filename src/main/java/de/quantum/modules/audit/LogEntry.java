@@ -144,16 +144,18 @@ public class LogEntry {
         }
 
         return """
-                `Member   `: %s (%s)
-                `Target   `: %s (%s)
-                `Action   `: %s
-                `Change   `: %s
-                `Reason   `: %s
-                `Timestamp`: <t:%s:R>
+                `Member      `: %s (%s)
+                `Target      `: %s (%s)
+                `Action Type `: %s (%s)
+                `Target Type `: %s (%s)
+                `Change      `: %s
+                `Reason      `: %s
+                `Timestamp   `: <t:%s:R>
                 """.formatted(
                 Objects.requireNonNull(getMember()).getAsMention(), getUserId(),
                 AuditHandler.getInstance().getTargetString(getGuild(), getTargetType(), getTargetId()), getTargetId(),
-                StringUtils.convertUpperCaseToTitleCase(getType().name()),
+                StringUtils.convertUpperCaseToTitleCase(getType().name()), getType().getKey(),
+                StringUtils.convertUpperCaseToTitleCase(getType().getTargetType().name()), getType().getTargetType().ordinal(),
                 changes,
                 getReason() != null ? getReason() : "n/a",
                 epochSecond
