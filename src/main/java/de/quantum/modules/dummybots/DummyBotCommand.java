@@ -35,8 +35,12 @@ public class DummyBotCommand implements CommandInterface<SlashCommandInteraction
 
     @Override
     public CommandDataImpl getCommandData() {
-        return new CommandDataImpl("dummies", "A command to manage the dummy bots in a group")
+        return new CommandDataImpl("dummy", "A command to manage the dummy bots in a group")
                 .addSubcommands(
+                        new SubcommandData("start", "Starts the dummy bot")
+                                .addOption(OptionType.USER, "bot_user", "The bot to start"),
+                        new SubcommandData("stop", "Stops the dummy bot")
+                                .addOption(OptionType.USER, "bot_user", "The bot to stop"),
                         new SubcommandData("status", "The Status of the current dummies"),
                         new SubcommandData("write", "All dummies writes the provided message in the channel")
                                 .addOptions(
