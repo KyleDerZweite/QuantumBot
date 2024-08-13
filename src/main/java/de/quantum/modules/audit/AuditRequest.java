@@ -142,7 +142,7 @@ public class AuditRequest {
         this.filteredLogEntries = AuditHandler.getInstance().getFilteredLogEntries(
                 guild.getId(),
                 memberId, targetId,
-                actionTypeId, targetTypeOrdinal
+                actionTypeId, targetTypeOrdinal, keyword
         );
 
         EmbedBuilder embedBuilder = getAuditEmbedBuilder();
