@@ -36,11 +36,11 @@ public class ShutdownManager {
             }
         }
 
-        try {
-            DatabaseManager.getInstance().getConnection().close();
-        } catch (SQLException e) {
-            log.error(e.getMessage(), e);
-        }
+//        try {
+//            DatabaseManager.getInstance().getConnection().close();
+//        } catch (SQLException e) {
+//            log.error(e.getMessage(), e);
+//        }
 
     }
 
