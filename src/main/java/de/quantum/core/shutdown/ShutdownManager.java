@@ -1,14 +1,12 @@
 package de.quantum.core.shutdown;
 
-import de.quantum.core.commands.CommandAnnotation;
-import de.quantum.core.commands.CommandInterface;
+import de.quantum.core.database.DatabaseManager;
 import lombok.extern.slf4j.Slf4j;
-import net.dv8tion.jda.api.events.GenericEvent;
-import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 import org.reflections8.Reflections;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 
 @Slf4j
 public class ShutdownManager {
@@ -31,13 +29,19 @@ public class ShutdownManager {
                 try {
                     ShutdownInterface shutdownInterface = (ShutdownInterface) clazz.getDeclaredConstructors()[0].newInstance();
                     shutdownInterface.shutdown();
-                } catch (InstantiationException | IllegalAccessException | InvocationTargetException newInstanceException) {
+                } catch (InstantiationException | IllegalAccessException |
+                         InvocationTargetException newInstanceException) {
                     log.error(newInstanceException.getMessage(), newInstanceException);
                 }
             }
-
-
         }
+
+        try {
+            DatabaseManager.getInstance().getConnection().close();
+        } catch (SQLException e) {
+            log.error(e.getMessage(), e);
+        }
+
     }
 
 }
