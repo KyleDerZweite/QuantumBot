@@ -1,7 +1,6 @@
-package de.quantum.modules.speeddating;
+package de.quantum.modules.speeddating.entities;
 
 import lombok.Data;
-import lombok.Getter;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 
