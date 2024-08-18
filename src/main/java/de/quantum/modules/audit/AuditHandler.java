@@ -6,8 +6,10 @@ import de.quantum.core.shutdown.ShutdownAnnotation;
 import de.quantum.core.shutdown.ShutdownInterface;
 import de.quantum.core.utils.Secret;
 import de.quantum.core.utils.StringUtils;
+import de.quantum.modules.audit.entries.AuditEntry;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import net.dv8tion.jda.api.audit.ActionType;
 import net.dv8tion.jda.api.audit.TargetType;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.IMentionable;
@@ -40,7 +42,7 @@ public class AuditHandler implements ShutdownInterface {
      * This structure allows efficient storage and retrieval of audit logs by their guild and log ID.
      */
     @Getter
-    private final ConcurrentHashMap<String, ConcurrentHashMap<String, LogEntry>> guildAuditLogCache;
+    private final ConcurrentHashMap<String, ConcurrentHashMap<String, AuditEntry>> guildAuditLogCache;
 
     @Getter
     private final TimeoutMap<String, AuditRequest> activeAuditRequests;
@@ -52,9 +54,9 @@ public class AuditHandler implements ShutdownInterface {
                             + AuditHandler.class.getName()
                             + " class already exists, Can't create a new instance.");
         }
-        guildAuditLogCache = new ConcurrentHashMap<>();
+        guildAuditLogCache = AuditDatabaseHandler.getAuditCache();
         activeAuditRequests = new TimeoutMap<>();
-        qidLogCounter = 0L;
+        qidLogCounter = AuditDatabaseHandler.getQidCounter();
     }
 
     public static AuditHandler getInstance() {
@@ -74,18 +76,18 @@ public class AuditHandler implements ShutdownInterface {
         return hexLongId;
     }
 
-    public List<LogEntry> getFilteredLogEntries(@NotNull String guildId, String memberId, String targetId, Integer actionTypeId, Integer targetTypeOrdinal, String keyword) {
+    public List<AuditEntry> getFilteredLogEntries(@NotNull String guildId, String memberId, String targetId, Integer actionTypeId, Integer targetTypeOrdinal, String keyword) {
         return getFilteredLogEntries(guildId, memberId, targetId, actionTypeId, targetTypeOrdinal, keyword, 100);
     }
 
-    public List<LogEntry> getFilteredLogEntries(@NotNull String guildId, String memberId, String targetId, Integer actionTypeId, Integer targetTypeOrdinal, String keyword, int amount) {
+    public List<AuditEntry> getFilteredLogEntries(@NotNull String guildId, String memberId, String targetId, Integer actionTypeId, Integer targetTypeOrdinal, String keyword, int amount) {
         return getAuditLogCache(guildId).values().stream()
                 .filter(entry -> {
-                    if (memberId != null && !entry.getUserId().equals(memberId)) return false;
-                    if (targetId != null && !entry.getTargetId().equals(targetId)) return false;
-                    if (actionTypeId != null && entry.getTypeRaw() != actionTypeId) return false;
+                    if (memberId != null && !entry.memberId().equals(memberId)) return false;
+                    if (targetId != null && !entry.targetId().equals(targetId)) return false;
+                    if (actionTypeId != null && entry.typeKey() != actionTypeId) return false;
                     if (keyword != null && !checkEntryForKeyword(keyword)) return false;
-                    if (targetTypeOrdinal != null && entry.getTargetType().ordinal() != targetTypeOrdinal) return false;
+                    if (targetTypeOrdinal != null && ActionType.from(entry.typeKey()).getTargetType().ordinal() != targetTypeOrdinal) return false;
                     return true;
                 })
                 .limit(amount)
@@ -96,18 +98,18 @@ public class AuditHandler implements ShutdownInterface {
         return true; //TODO implement keyword search, not to sure anymore what to do with it but gonna see...
     }
 
-    public ConcurrentHashMap<String, LogEntry> getAuditLogCache(String guildId) {
+    public ConcurrentHashMap<String, AuditEntry> getAuditLogCache(String guildId) {
         if (!guildAuditLogCache.containsKey(guildId)) {
             guildAuditLogCache.put(guildId, new ConcurrentHashMap<>());
         }
         return guildAuditLogCache.get(guildId);
     }
 
-    public void cacheLog(Guild guild, LogEntry logEntry) {
+    public void cacheLog(Guild guild, AuditEntry auditEntry) {
         if (!guildAuditLogCache.containsKey(guild.getId())) {
             guildAuditLogCache.put(guild.getId(), new ConcurrentHashMap<>());
         }
-        getAuditLogCache(guild.getId()).put(logEntry.getQid(), logEntry);
+        getAuditLogCache(guild.getId()).put(auditEntry.qid(), auditEntry);
     }
 
     public String getTargetString(Guild guild, TargetType targetType, String targetId) {
@@ -165,6 +167,7 @@ public class AuditHandler implements ShutdownInterface {
     @Override
     public void shutdown() {
         activeAuditRequests.shutdown();
+        AuditDatabaseHandler.saveAuditEntries(guildAuditLogCache);
     }
 
     public String getAuditRequestId() {

@@ -3,6 +3,7 @@ package de.quantum.modules.audit;
 import de.quantum.core.utils.CheckUtils;
 import de.quantum.core.utils.EmbedUtils;
 import de.quantum.core.utils.SearchHandler;
+import de.quantum.modules.audit.entries.AuditEntry;
 import lombok.Getter;
 import lombok.Setter;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -49,7 +50,7 @@ public class AuditRequest {
     private String keyword = null;
 
     @Setter
-    private List<LogEntry> filteredLogEntries;
+    private List<AuditEntry> filteredLogEntries;
 
     private int index = 0;
 
@@ -85,7 +86,10 @@ public class AuditRequest {
         return Math.min(filteredLogEntries.size(), index + 1);
     }
 
-    public List<LogEntry> getTrimmedFilteredLogEntries() {
+    public List<AuditEntry> getTrimmedFilteredLogEntries() {
+        if (index > filteredLogEntries.size()) {
+            index = 0;
+        }
         return filteredLogEntries.subList(index, getMaxIndex());
     }
 
@@ -104,8 +108,8 @@ public class AuditRequest {
                 `Target Type `: %s
                 """.formatted(memberStr, targetStr, actionTypeIdStr, targetTypeOrdinalStr), false);
 
-        for (LogEntry logEntry : getTrimmedFilteredLogEntries()) {
-            embedBuilder.addField(logEntry.toString(), logEntry.getFieldValue(), false);
+        for (AuditEntry auditEntry : getTrimmedFilteredLogEntries()) {
+            embedBuilder.addField(auditEntry.getNameValue(), auditEntry.getFieldValue(), false);
         }
         return embedBuilder;
     }

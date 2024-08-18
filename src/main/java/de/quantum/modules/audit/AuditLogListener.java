@@ -2,6 +2,7 @@ package de.quantum.modules.audit;
 
 import de.quantum.core.events.EventAnnotation;
 import de.quantum.core.events.EventInterface;
+import de.quantum.modules.audit.entries.LogEntry;
 import net.dv8tion.jda.api.events.guild.GuildAuditLogEntryCreateEvent;
 
 @EventAnnotation
