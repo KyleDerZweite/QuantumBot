@@ -9,8 +9,6 @@ import de.quantum.core.shutdown.ShutdownManager;
 import de.quantum.core.utils.ConsoleScanner;
 import de.quantum.modules.dummybots.DummyBotManager;
 
-import java.util.Scanner;
-
 
 public class Main {
 
