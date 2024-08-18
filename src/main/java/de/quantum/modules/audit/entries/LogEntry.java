@@ -1,6 +1,6 @@
 package de.quantum.modules.audit.entries;
 
-import de.quantum.modules.audit.AuditHandler;
+import de.quantum.modules.audit.AuditManager;
 import net.dv8tion.jda.api.audit.AuditLogChange;
 import net.dv8tion.jda.api.audit.AuditLogEntry;
 import net.dv8tion.jda.api.entities.Member;
@@ -12,7 +12,7 @@ import java.util.Map;
 public record LogEntry(String qid, AuditLogEntry auditLogEntry, long epochSecond) implements AuditEntry {
 
     public LogEntry(AuditLogEntry auditLogEntry) {
-        this(AuditHandler.getInstance().getQidLogCounter(), auditLogEntry, auditLogEntry.getTimeCreated().toEpochSecond());
+        this(AuditManager.getInstance().getQidLogCounter(), auditLogEntry, auditLogEntry.getTimeCreated().toEpochSecond());
     }
 
     @Override
@@ -42,7 +42,7 @@ public record LogEntry(String qid, AuditLogEntry auditLogEntry, long epochSecond
 
     @Override
     public String targetString() {
-        return AuditHandler.getInstance().getTargetString(auditLogEntry.getGuild(), auditLogEntry.getType().getTargetType(), targetId());
+        return AuditManager.getInstance().getTargetString(auditLogEntry.getGuild(), auditLogEntry.getType().getTargetType(), targetId());
     }
 
     @Override
