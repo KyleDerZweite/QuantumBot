@@ -130,6 +130,8 @@ public class DummyBotManager implements ShutdownInterface {
                 }
                 ArrayList<String> tokens = guildDummyTokenMap.get(guildId);
                 String botId = rs.getString("bot_id");
+                boolean isActive = rs.getBoolean("active");
+                if (!isActive) continue;
                 ResultSet botTokenSet = DatabaseManager.getInstance().selectFromWhere("token", "bots", "bot_id", botId);
                 if (botTokenSet.next()) {
                     String botToken = botTokenSet.getString("token");
