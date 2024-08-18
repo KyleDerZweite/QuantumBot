@@ -3,6 +3,7 @@ package de.quantum.modules.audit;
 import de.quantum.core.commands.CommandAnnotation;
 import de.quantum.core.commands.CommandInterface;
 import de.quantum.core.commands.CommandType;
+import de.quantum.core.module.ModuleCommand;
 import de.quantum.core.utils.EmbedUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -21,6 +22,9 @@ import java.util.List;
 import java.util.Objects;
 
 @CommandAnnotation
+@ModuleCommand(
+        moduleName = "Audit"
+)
 public class AuditCommand implements CommandInterface<SlashCommandInteractionEvent> {
     @Override
     public CommandDataImpl getCommandData() {

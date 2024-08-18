@@ -2,6 +2,7 @@ package de.quantum.modules.audit;
 
 import de.quantum.core.entities.EmptyMentionable;
 import de.quantum.core.entities.TimeoutMap;
+import de.quantum.core.module.ModuleAnnotation;
 import de.quantum.core.shutdown.ShutdownAnnotation;
 import de.quantum.core.shutdown.ShutdownInterface;
 import de.quantum.core.utils.Secret;
@@ -23,11 +24,18 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @ShutdownAnnotation
-public class AuditHandler implements ShutdownInterface {
+@ModuleAnnotation(
+        moduleName = "Audit",
+        moduleDescription = "Audit system for a better AuditLogs",
+        moduleVersion = "v0.0.1",
+        moduleAuthorName = "kylederzweite",
+        moduleAuthorID = "378542649579143188"
+)
+public class AuditManager implements ShutdownInterface {
 
     public static final String AUDIT_BUTTON_ID = "audit";
 
-    private static volatile AuditHandler INSTANCE = null;
+    private static volatile AuditManager INSTANCE = null;
 
     private Long qidLogCounter;
 
@@ -47,23 +55,23 @@ public class AuditHandler implements ShutdownInterface {
     @Getter
     private final TimeoutMap<String, AuditRequest> activeAuditRequests;
 
-    private AuditHandler() {
+    private AuditManager() {
         if (INSTANCE != null) {
             throw new AssertionError(
                     "Another instance of "
-                            + AuditHandler.class.getName()
+                            + AuditManager.class.getName()
                             + " class already exists, Can't create a new instance.");
         }
-        guildAuditLogCache = AuditDatabaseHandler.getAuditCache();
+        guildAuditLogCache = AuditDatabaseManager.getAuditCache();
         activeAuditRequests = new TimeoutMap<>();
-        qidLogCounter = AuditDatabaseHandler.getQidCounter();
+        qidLogCounter = AuditDatabaseManager.getQidCounter();
     }
 
-    public static AuditHandler getInstance() {
+    public static AuditManager getInstance() {
         if (INSTANCE == null) {
-            synchronized (AuditHandler.class) {
+            synchronized (AuditManager.class) {
                 if (INSTANCE == null) {
-                    INSTANCE = new AuditHandler();
+                    INSTANCE = new AuditManager();
                 }
             }
         }
@@ -167,7 +175,7 @@ public class AuditHandler implements ShutdownInterface {
     @Override
     public void shutdown() {
         activeAuditRequests.shutdown();
-        AuditDatabaseHandler.saveAuditEntries(guildAuditLogCache);
+        AuditDatabaseManager.saveAuditEntries(guildAuditLogCache);
     }
 
     public String getAuditRequestId() {

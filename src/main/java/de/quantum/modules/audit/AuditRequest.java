@@ -55,12 +55,12 @@ public class AuditRequest {
     private int index = 0;
 
     public AuditRequest(Guild guild, InteractionHook hook) {
-        this.requestId = AuditHandler.getInstance().getAuditRequestId();
+        this.requestId = AuditManager.getInstance().getAuditRequestId();
         this.guild = Objects.requireNonNull(guild);
         this.hook = Objects.requireNonNull(hook);
 
-        if (!AuditHandler.getInstance().getActiveAuditRequests().containsKey(requestId)) {
-            AuditHandler.getInstance().getActiveAuditRequests().put(requestId, this);
+        if (!AuditManager.getInstance().getActiveAuditRequests().containsKey(requestId)) {
+            AuditManager.getInstance().getActiveAuditRequests().put(requestId, this);
         }
     }
 
@@ -115,7 +115,7 @@ public class AuditRequest {
     }
 
     private String getButtonKey(String name) {
-        return "%s_%s_%s".formatted(AuditHandler.AUDIT_BUTTON_ID, requestId, name);
+        return "%s_%s_%s".formatted(AuditManager.AUDIT_BUTTON_ID, requestId, name);
     }
 
     private Button[] getAuditButtons() {
@@ -143,7 +143,7 @@ public class AuditRequest {
         String memberId = member != null ? member.getId() : null;
         String targetId = target != null ? target.getId() : null;
 
-        this.filteredLogEntries = AuditHandler.getInstance().getFilteredLogEntries(
+        this.filteredLogEntries = AuditManager.getInstance().getFilteredLogEntries(
                 guild.getId(),
                 memberId, targetId,
                 actionTypeId, targetTypeOrdinal, keyword
@@ -171,7 +171,7 @@ public class AuditRequest {
             }
             case TARGET_INPUT_KEY -> {
                 if (CheckUtils.isDigit(value)) {
-                    this.target = AuditHandler.getInstance().getTarget(guild, targetTypeOrdinal, value);
+                    this.target = AuditManager.getInstance().getTarget(guild, targetTypeOrdinal, value);
                 } else {
                     this.target = SearchHandler.getClosestMatchingIMentionableByName(guild, value);
                 }

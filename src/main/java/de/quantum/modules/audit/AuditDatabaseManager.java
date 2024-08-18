@@ -9,7 +9,7 @@ import java.sql.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-public class AuditDatabaseHandler {
+public class AuditDatabaseManager {
 
     public static final String DATABASE_NAME = "audit";
 
