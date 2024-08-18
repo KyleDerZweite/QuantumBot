@@ -22,7 +22,7 @@ public class Main {
 
         Runtime.getRuntime().addShutdownHook(new Thread(ShutdownManager::shutdown));
 
-        //new Thread(() -> DummyBotManager.getInstance().startAll()).start();
+        new Thread(() -> DummyBotManager.getInstance().startAll()).start();
         ShardMan.init();
     }
 }
