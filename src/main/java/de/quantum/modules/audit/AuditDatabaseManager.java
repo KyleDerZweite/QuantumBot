@@ -3,6 +3,7 @@ package de.quantum.modules.audit;
 import de.quantum.core.database.DatabaseManager;
 import de.quantum.modules.audit.entries.AuditEntry;
 import de.quantum.modules.audit.entries.DatabaseEntry;
+import de.quantum.modules.audit.entries.LogEntry;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
@@ -69,7 +70,11 @@ public class AuditDatabaseManager {
 
     public static void saveAuditEntries(ConcurrentHashMap<String, ConcurrentHashMap<String, AuditEntry>> auditCache) {
         ensureTableExists();
-        auditCache.forEach((guildId, guildCache) -> guildCache.forEach((qid, auditEntry) -> insertAuditEntry(auditEntry)));
+        auditCache.forEach((guildId, guildCache) -> guildCache.forEach((qid, auditEntry) -> {
+            if (auditEntry instanceof LogEntry) {
+                insertAuditEntry(auditEntry);
+            }
+        }));
     }
 
     public static ConcurrentHashMap<String, ConcurrentHashMap<String, AuditEntry>> getAuditCache() {

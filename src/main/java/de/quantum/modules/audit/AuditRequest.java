@@ -67,13 +67,15 @@ public class AuditRequest {
     public void next() {
         if (index + MAX_ENTRIES_PER_EMBED < filteredLogEntries.size()) {
             index += MAX_ENTRIES_PER_EMBED;
+            update();
         }
-        update();
     }
 
     public void previous() {
-        if (index - MAX_ENTRIES_PER_EMBED > 0) {
+        if ((index - MAX_ENTRIES_PER_EMBED) >= 0) {
             index -= MAX_ENTRIES_PER_EMBED;
+        } else {
+            index = 0;
         }
         update();
     }
@@ -166,7 +168,7 @@ public class AuditRequest {
                 if (CheckUtils.isDigit(value)) {
                     this.member = guild.getMemberById(value);
                 } else {
-                    this.member = SearchHandler.getClosestMatchingMemberByName(guild, value);
+                    this.member = (Member) SearchHandler.getClosestMatchingMemberByName(guild, value).closestMatch();
                 }
             }
             case TARGET_INPUT_KEY -> {

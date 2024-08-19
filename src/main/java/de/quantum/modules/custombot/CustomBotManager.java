@@ -42,7 +42,7 @@ public class CustomBotManager {
         return INSTANCE;
     }
 
-    public JDA getCustomBotJDA(String token) {
+    public JDA getCustomBotJda(String token) {
         return JDABuilder.create(token, EnumSet.allOf(GatewayIntent.class))
                 .setStatus(OnlineStatus.DO_NOT_DISTURB)
                 .enableCache(EnumSet.allOf(CacheFlag.class))

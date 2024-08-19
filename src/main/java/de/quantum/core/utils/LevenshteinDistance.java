@@ -64,39 +64,4 @@ public class LevenshteinDistance {
         // the distance is the cost for transforming all letters in both strings
         return cost[len0 - 1];
     }
-
-    public static int levenshteinDistanceExactMatchWeighted(String s1, String s2) {
-        int[] costs = new int[s2.length() + 1];
-        for (int k = 0; k < s1.length() + 1; k++) {
-            int lastValue = k;
-            for (int i = 0; i < s2.length() + 1; i++) {
-                if (i == 0) {
-                    costs[i] = k;
-                } else {
-                    int match;
-                    int insert = costs[i] + 1;
-                    int delete = lastValue + 1;
-
-                    if (k > 0) {
-                        match = costs[i - 1] + (s1.charAt(k - 1) == s2.charAt(i - 1) ? 0 : 1);
-                    } else {
-                        match = costs[i - 1] + 1;
-                    }
-
-                    // Check if the entire input string is contained in the member name
-                    if (s2.contains(s1)) {
-                        match = 0; // Give a perfect score if the input string is contained
-                    }
-
-                    costs[i] = Math.min(Math.min(insert, delete), match);
-                }
-                lastValue = costs[i];
-            }
-            if (k > 0) {
-                costs[s2.length()] = lastValue;
-            }
-        }
-        return costs[s2.length()];
-    }
-
 }
