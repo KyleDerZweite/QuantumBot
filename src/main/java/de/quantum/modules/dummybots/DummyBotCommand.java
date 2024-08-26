@@ -6,15 +6,19 @@ import de.quantum.core.commands.CommandType;
 import de.quantum.core.module.ModuleCommand;
 import de.quantum.core.utils.AudioManagerUtils;
 import de.quantum.core.utils.CheckUtils;
+import de.quantum.core.utils.Secret;
 import de.quantum.core.utils.StatusUtils;
+import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.exceptions.InvalidTokenException;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -29,6 +33,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @CommandAnnotation
 @ModuleCommand(moduleName = "DummyBot")
 public class DummyBotCommand implements CommandInterface<SlashCommandInteractionEvent> {
@@ -37,6 +42,8 @@ public class DummyBotCommand implements CommandInterface<SlashCommandInteraction
     public CommandDataImpl getCommandData() {
         return new CommandDataImpl("dummy", "A command to manage the dummy bots in a group")
                 .addSubcommands(
+                        new SubcommandData("add", "Adds a new dummy bot")
+                                .addOption(OptionType.STRING, "token", "The Token of the dummy bot!", true),
                         new SubcommandData("start", "Starts the dummy bot")
                                 .addOption(OptionType.USER, "bot_user", "The bot to start"),
                         new SubcommandData("stop", "Stops the dummy bot")
@@ -72,6 +79,9 @@ public class DummyBotCommand implements CommandInterface<SlashCommandInteraction
         }
         commandStatement += event.getSubcommandName();
         switch (commandStatement) {
+            case "add" -> handleAdd(event);
+            case "start" -> handleStart(event);
+            case "stop" -> handleStop(event);
             case "status" -> handleStatus(event);
             case "write" -> handleWrite(event);
             case "delete" -> handleDelete(event);
@@ -91,6 +101,49 @@ public class DummyBotCommand implements CommandInterface<SlashCommandInteraction
         return CommandType.GUILD_ONLY;
     }
 
+    public void handleAdd(SlashCommandInteractionEvent event) {
+        if (event.getOption("token") == null) {
+            event.getHook().editOriginal("Please provide a valid token!").queue();
+            return;
+        }
+        String token = Objects.requireNonNull(event.getOption("token")).getAsString();
+        String encryptedToken = Secret.encrypt(token);
+        try {
+            JDA dummyJda = DummyBotManager.getInstance().getTestDummyJDA(encryptedToken);
+            String botId = dummyJda.getSelfUser().getId();
+            String guildId = Objects.requireNonNull(event.getGuild()).getId();
+            DummyBotDatabaseManager.addDummyBot(botId, encryptedToken, guildId);
+            dummyJda.shutdown();
+            dummyJda.shutdownNow();
+            DummyBotManager.getInstance().startBotId(guildId, botId);
+        } catch (InvalidTokenException ignored) {
+            event.getHook().editOriginal("Please provide a valid token!").queue();
+        }
+    }
+
+    public void handleStart(SlashCommandInteractionEvent event) {
+        if (event.getOption("bot_user") == null) {
+            DummyBotManager.getInstance().startBotsFromGuild(Objects.requireNonNull(event.getGuild()).getId());
+        } else {
+            Member member = Objects.requireNonNull(event.getOption("bot_user")).getAsMember();
+            assert member != null;
+            String botId = member.getId();
+            DummyBotManager.getInstance().startBotId(Objects.requireNonNull(event.getGuild()).getId(), botId);
+        }
+        event.getHook().editOriginal("Successfully started.").queue();
+    }
+
+    public void handleStop(SlashCommandInteractionEvent event) {
+        if (event.getOption("bot_user") == null) {
+            DummyBotManager.getInstance().stopBotsFromGuild(Objects.requireNonNull(event.getGuild()).getId());
+        } else {
+            Member member = Objects.requireNonNull(event.getOption("bot_user")).getAsMember();
+            assert member != null;
+            String botId = member.getId();
+            DummyBotManager.getInstance().stopBotId(Objects.requireNonNull(event.getGuild()).getId(), botId);
+        }
+        event.getHook().editOriginal("Successfully stopped.").queue();
+    }
 
     public void handleStatus(SlashCommandInteractionEvent event) {
         assert event.getGuild() != null;
