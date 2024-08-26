@@ -1,10 +1,9 @@
 package de.quantum.core.commands;
 
 import de.quantum.core.LanguageManager;
-import de.quantum.core.database.DatabaseManager;
 import de.quantum.core.utils.CheckUtils;
 import de.quantum.core.utils.Utils;
-import de.quantum.modules.dummybots.DummyBotManager;
+import de.quantum.modules.dummybots.DummyBotDatabaseManager;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
@@ -77,7 +76,7 @@ public class CommandManager {
             if (CheckUtils.checkNull(jda)) {
                 log.warn("Null-JDA registered Command: {}", commandName);
                 continue;
-            } else if (DummyBotManager.getInstance().isDummyBot(jda.getSelfUser().getId())) {
+            } else if (DummyBotDatabaseManager.isDummyBot(jda.getSelfUser().getId())) {
                 if (commandInterface.getType() != CommandType.DUMMY) {
                     continue;
                 }

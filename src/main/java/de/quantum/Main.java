@@ -7,6 +7,7 @@ import de.quantum.core.database.DatabaseManager;
 import de.quantum.core.module.ModuleManager;
 import de.quantum.core.shutdown.ShutdownManager;
 import de.quantum.core.utils.ConsoleScanner;
+import de.quantum.modules.custombot.CustomBotManager;
 import de.quantum.modules.dummybots.DummyBotManager;
 
 
@@ -21,6 +22,7 @@ public class Main {
         Runtime.getRuntime().addShutdownHook(new Thread(ShutdownManager::shutdown));
 
         new Thread(() -> DummyBotManager.getInstance().startAll()).start();
+        new Thread(() -> CustomBotManager.getInstance().startAll()).start();
         ShardMan.init();
     }
 }
