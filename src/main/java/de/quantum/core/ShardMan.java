@@ -5,6 +5,7 @@ import de.quantum.core.shutdown.ShutdownAnnotation;
 import de.quantum.core.shutdown.ShutdownInterface;
 import de.quantum.core.utils.CheckUtils;
 import de.quantum.core.utils.Utils;
+import de.quantum.modules.custombot.CustomBotDatabaseManager;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
@@ -55,6 +56,12 @@ public class ShardMan extends ListenerAdapter implements ShutdownInterface {
                 .addEventListeners(new EventReflector());
         this.shardManager = builder.build();
         this.jdaInstanceHashMap = new ConcurrentHashMap<>();
+
+        shardManager.getGuilds().forEach(guild -> {
+            if (CustomBotDatabaseManager.guildHasCustomBot(guild.getId())) {
+                guild.leave().submit().join();
+            }
+        });
     }
 
     public static ShardMan getInstance() {
