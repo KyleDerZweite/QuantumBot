@@ -1,5 +1,6 @@
 package de.quantum.core.database;
 
+import de.quantum.core.BotType;
 import de.quantum.core.utils.CheckUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,8 @@ public class DatabaseManager {
 
     @Getter
     private Connection connection = null;
+
+    public static final String BOT_TABLE_NAME = "bots";
 
     private DatabaseManager() {
         if (INSTANCE != null) {
@@ -100,7 +103,7 @@ public class DatabaseManager {
     }
 
     public ArrayList<String> getVerifiedTokens() {
-        ResultSet rs = selectFrom("token", "bots");
+        ResultSet rs = selectFrom("token", BOT_TABLE_NAME);
         if (CheckUtils.checkNull(rs)) {
             return null;
         }
@@ -116,14 +119,19 @@ public class DatabaseManager {
         return verifiedTokens;
     }
 
-    public long getCommandCooldown(@Nullable Guild guild, String commandId) {
-        if (guild == null) {
-            // Database query for the default command cooldown
-            return 0L;
+    public void insertNewBot(String botId, String encryptedToken, BotType botType) {
+        String sql = "INSERT INTO " + BOT_TABLE_NAME +" (bot_id, token, type) VALUES (?, ?, ?)";
+        try (PreparedStatement stmt = DatabaseManager.getInstance().getConnection().prepareStatement(sql)) {
+            stmt.setString(1, botId);
+            stmt.setString(2, encryptedToken);
+            stmt.setInt(3, botType.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            log.error(e.getMessage(), e);
         }
-        // Datebase quere with guild id and command id
-        return 1L;
     }
+
+
 
 
 }
