@@ -1,6 +1,6 @@
 package de.quantum.core.commands;
 
-import de.quantum.core.LanguageManager;
+import de.quantum.core.utils.LanguageManager;
 import de.quantum.core.utils.CheckUtils;
 import de.quantum.core.utils.Utils;
 import de.quantum.modules.dummybots.DummyBotDatabaseManager;
@@ -97,7 +97,6 @@ public class CommandManager {
                     Command command = jda.upsertCommand(commandData).submit().join();
                     commandHashMap.put(command.getId(), commandInterface);
                 }
-
             }
             log.debug("{} registered Command: {}", Utils.getJdaShardGuildCountString(jda), commandName);
         }

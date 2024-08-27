@@ -1,6 +1,6 @@
 package de.quantum.commands;
 
-import de.quantum.core.LanguageManager;
+import de.quantum.core.utils.LanguageManager;
 import de.quantum.core.ShardMan;
 import de.quantum.core.commands.CommandAnnotation;
 import de.quantum.core.commands.CommandInterface;

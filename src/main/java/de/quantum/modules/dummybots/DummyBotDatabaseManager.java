@@ -1,5 +1,6 @@
 package de.quantum.modules.dummybots;
 
+import de.quantum.core.BotType;
 import de.quantum.core.database.DatabaseManager;
 import de.quantum.core.utils.CheckUtils;
 import de.quantum.core.utils.Secret;
@@ -23,7 +24,7 @@ public class DummyBotDatabaseManager {
     }
 
     public static void addDummyBot(@NotNull String botId, @NotNull String encryptedToken, String guildId, boolean isActive) {
-        DatabaseManager.getInstance().insertNewBot(botId, encryptedToken);
+        DatabaseManager.getInstance().insertNewBot(botId, encryptedToken, BotType.DUMMY);
 
         String sql = "INSERT INTO " + DUMMY_BOT_TABLE_NAME + " (bot_id, guild_id, active) VALUES (?, ?, ?)";
         try (PreparedStatement stmt = DatabaseManager.getInstance().getConnection().prepareStatement(sql)) {
@@ -39,7 +40,7 @@ public class DummyBotDatabaseManager {
     @NotNull
     public static ConcurrentHashMap<String, ArrayList<String>> getDummyBots() {
         ConcurrentHashMap<String, ArrayList<String>> guildDummyTokenMap = new ConcurrentHashMap<>();
-        ResultSet rs = DatabaseManager.getInstance().selectFrom("*", "dummy_bots");
+        ResultSet rs = DatabaseManager.getInstance().selectFrom("*", DUMMY_BOT_TABLE_NAME);
         if (CheckUtils.checkNull(rs)) {
             return guildDummyTokenMap;
         }
@@ -89,7 +90,7 @@ public class DummyBotDatabaseManager {
     }
 
     public static boolean isDummyBot(String botId) {
-        ResultSet rs = DatabaseManager.getInstance().selectFromWhere("*", "dummy_bots", "bot_id", botId);
+        ResultSet rs = DatabaseManager.getInstance().selectFromWhere("*", DUMMY_BOT_TABLE_NAME, "bot_id", botId);
         if (CheckUtils.checkNull(rs)) {
             return false;
         }

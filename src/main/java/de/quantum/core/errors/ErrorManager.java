@@ -1,6 +1,6 @@
 package de.quantum.core.errors;
 
-import de.quantum.core.LanguageManager;
+import de.quantum.core.utils.LanguageManager;
 import de.quantum.core.utils.EmbedUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;

@@ -1,5 +1,6 @@
 package de.quantum.core;
 
+import de.quantum.core.utils.LanguageManager;
 import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
