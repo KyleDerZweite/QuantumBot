@@ -27,19 +27,26 @@ public class ConsoleScanner {
     }
 
     public void start() {
-        new Thread(this::checkStop).start();
+        new Thread(this::checkConsoleInput).start();
     }
 
-    private void checkStop() {
+    private void checkConsoleInput() {
         Scanner scanner = new Scanner(System.in);
         while (true) {
             String userInput = scanner.nextLine();
-            if (userInput.equalsIgnoreCase("stop")) {
-                System.exit(0);
-                break;
+            String inputIdentifier = userInput.split(" ")[0];
+            switch (inputIdentifier) {
+                case "stop" -> {
+                    scanner.close();
+                    System.exit(0);
+                }
+                case "encrypt" -> {
+                    String inputValue = userInput.split(" ")[1];
+                    System.out.println(Secret.encrypt(inputValue));
+                }
             }
         }
-        scanner.close();
+
     }
 
 }
