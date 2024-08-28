@@ -205,8 +205,8 @@ public class StatusUtils {
 
     public Button[] getButtonsForPage(String buttonKey) {
         int page = getPageFromButtonKey(buttonKey);
-        Button currentButton = new ButtonImpl(getButtonKeyForPage(page), getButtonValueForPage(page), ButtonStyle.SUCCESS, true, null);
         Button previousButton = new ButtonImpl(getButtonKeyForPage(page - 1), getButtonValueForPage(page - 1), ButtonStyle.PRIMARY, false, null);
+        Button currentButton = new ButtonImpl(getButtonKeyForPage(page), getButtonValueForPage(page), ButtonStyle.SUCCESS, true, null);
         Button nextButton = new ButtonImpl(getButtonKeyForPage(page + 1), getButtonValueForPage(page + 1), ButtonStyle.PRIMARY, false, null);
         return new Button[]{previousButton, currentButton, nextButton};
     }
