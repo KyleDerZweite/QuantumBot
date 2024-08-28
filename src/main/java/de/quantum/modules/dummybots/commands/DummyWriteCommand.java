@@ -15,7 +15,7 @@ import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 import java.util.Objects;
 
 @CommandAnnotation
-public class WriteCommand implements CommandInterface<SlashCommandInteractionEvent> {
+public class DummyWriteCommand implements CommandInterface<SlashCommandInteractionEvent> {
 
     @Override
     public CommandDataImpl getCommandData() {

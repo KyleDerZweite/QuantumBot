@@ -19,7 +19,6 @@ import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.InvalidTokenException;
-import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
@@ -62,7 +61,7 @@ public class DummyBotCommand implements CommandInterface<SlashCommandInteraction
                                                 .addOption(OptionType.CHANNEL, "voice_channel", "The voice channel to join", false),
                                         new SubcommandData("leave", "Leaves a voice channel")
                                 )
-                ).setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MESSAGE_MANAGE));
+                );
     }
 
     @Override
@@ -93,7 +92,7 @@ public class DummyBotCommand implements CommandInterface<SlashCommandInteraction
 
     @Override
     public Permission[] getPermissions() {
-        return new Permission[]{Permission.MODERATE_MEMBERS};
+        return new Permission[]{Permission.MANAGE_SERVER};
     }
 
     @Override

@@ -15,7 +15,7 @@ import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 import java.util.Objects;
 
 @CommandAnnotation
-public class VoiceCommand implements CommandInterface<SlashCommandInteractionEvent> {
+public class DummyVoiceCommand implements CommandInterface<SlashCommandInteractionEvent> {
 
     @Override
     public CommandDataImpl getCommandData() {

@@ -7,10 +7,12 @@ import de.quantum.modules.dummybots.DummyBotDatabaseManager;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.DiscordLocale;
 import net.dv8tion.jda.api.interactions.commands.Command;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 import org.reflections8.Reflections;
@@ -72,6 +74,10 @@ public class CommandManager {
         }
         for (CommandInterface<? extends GenericCommandInteractionEvent> commandInterface : commandInterfaceList) {
             CommandData commandData = commandInterface.getCommandData();
+            Permission[] commandPermissions = commandInterface.getPermissions();
+            DefaultMemberPermissions mPerms = DefaultMemberPermissions.enabledFor(commandPermissions);
+            commandData.setDefaultPermissions(mPerms);
+
             String commandName = commandData.getName();
             if (CheckUtils.checkNull(jda)) {
                 log.warn("Null-JDA registered Command: {}", commandName);

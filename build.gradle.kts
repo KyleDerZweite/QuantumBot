@@ -19,7 +19,7 @@ dependencies {
     testCompileOnly("org.projectlombok:lombok:1.18.32")
     testAnnotationProcessor("org.projectlombok:lombok:1.18.32")
 
-    implementation("net.dv8tion:JDA:5.0.2")
+    implementation("net.dv8tion:JDA:5.1.0")
     implementation("com.google.code.gson:gson:2.11.0")
 
     implementation("net.oneandone.reflections8:reflections8:0.11.7")

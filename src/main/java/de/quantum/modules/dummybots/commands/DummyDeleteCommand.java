@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Objects;
 
 @CommandAnnotation
-public class DeleteCommand implements CommandInterface<SlashCommandInteractionEvent> {
+public class DummyDeleteCommand implements CommandInterface<SlashCommandInteractionEvent> {
 
     private static final int DEFAULT_AMOUNT = 1;
     private static final int MAX_AMOUNT = 10;
