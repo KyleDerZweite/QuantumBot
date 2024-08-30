@@ -17,7 +17,7 @@ public class ShutdownManager {
 
         for (Class<?> clazz : new Reflections().getTypesAnnotatedWith(ShutdownAnnotation.class)) {
             ShutdownAnnotation annotation = clazz.getAnnotation(ShutdownAnnotation.class);
-            if (annotation.position().equalsIgnoreCase("last")) {
+            if (annotation.shutdownLast()) {
                 shutdownClasses.addLast(clazz);
             } else {
                 shutdownClasses.addFirst(clazz);

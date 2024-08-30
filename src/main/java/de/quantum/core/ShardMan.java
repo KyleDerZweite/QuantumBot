@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 
 @Slf4j
-@ShutdownAnnotation
+@ShutdownAnnotation(shutdownLast = true)
 public class ShardMan extends ListenerAdapter implements ShutdownInterface {
 
     private static volatile ShardMan INSTANCE = null;
