@@ -72,7 +72,6 @@ public class CustomBotManager implements ShutdownInterface {
         if (botJda != null) {
             log.warn("Shutting down {}", Utils.getJdaShardGuildCountString(botJda));
             botJda.shutdown();
-            botJda.shutdownNow();
         }
     }
 

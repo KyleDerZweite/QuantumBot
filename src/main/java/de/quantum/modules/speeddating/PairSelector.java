@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class PairSelector {
 
-    public static Object[] selectBestSpeedDatingPairs(ConcurrentHashMap<String, SpeedDatingUser> tMap) {
+    public static MatchingResult getBestMatches(ConcurrentHashMap<String, SpeedDatingUser> tMap) {
         List<String> users = new ArrayList<>(tMap.keySet());
         Set<String> paired = new HashSet<>();
 
@@ -66,8 +66,7 @@ public class PairSelector {
 
         // If there's an odd user out, just leave them unpaired
         List<String> finalUnpairedUsers = unpairedUsers.size() == 1 ? unpairedUsers : new ArrayList<>();
-
-        return new Object[]{pairs, finalUnpairedUsers, zeroPairs.size()};
+        return new MatchingResult(pairs, finalUnpairedUsers, zeroPairs.size());
     }
 
     public static Object[] selectBestPairs(Map<Integer, Map<Integer, Integer>> possibleMatches) {
@@ -208,5 +207,7 @@ public class PairSelector {
         System.out.println("Zero pairs count: " + zeroPairsCount);
     }
 
+
+    public record MatchingResult(List<String[]> pairs, List<String> finalUnpairedUsers, int zeroPairsCount) {}
 }
 

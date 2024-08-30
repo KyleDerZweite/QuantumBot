@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.LinkedList;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.RejectedExecutionException;
 
 @Slf4j
 @Data
@@ -59,7 +60,7 @@ public class SpeedDatingUser {
         try {
             assert this.member != null;
             voiceChannel.getGuild().moveVoiceMember(this.member, voiceChannel).queue();
-        } catch (IllegalStateException e) {
+        } catch (IllegalStateException | RejectedExecutionException e) {
             log.debug(e.getMessage());
             return false;
         }

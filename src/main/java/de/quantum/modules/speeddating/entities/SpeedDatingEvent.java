@@ -1,5 +1,6 @@
 package de.quantum.modules.speeddating.entities;
 
+import de.quantum.modules.speeddating.PairSelector;
 import de.quantum.modules.speeddating.SpeedDatingDatabaseManager;
 import de.quantum.modules.speeddating.SpeedDatingManager;
 import lombok.extern.slf4j.Slf4j;
@@ -7,6 +8,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -79,11 +81,13 @@ public class SpeedDatingEvent {
         return availableSpeedDatingUserMap;
     }
 
-    public void updateUsers(ConcurrentHashMap<String, String> userMatchingMap) {
-        userMatchingMap.forEach((userId1, userId2) -> {
+    public void updateUsers(List<String[]> pairs) {
+        for (String[] pair : pairs) {
+            String userId1 = pair[0];
+            String userId2 = pair[1];
             speedDatingUserMap.get(userId1).updateHistory(userId2, roundCounter);
             speedDatingUserMap.get(userId2).updateHistory(userId1, roundCounter);
-        });
+        }
     }
 
     public void finishRound() {
@@ -93,12 +97,21 @@ public class SpeedDatingEvent {
         });
     }
 
-    public void startNextRound() {
+    public void runNextRound() {
         ConcurrentHashMap<String, SpeedDatingUser> availableSpeedDatingUserMap = getAvailableSpeedDatingUserMap();
-        ConcurrentHashMap<String, String> userMatchingMap = new ConcurrentHashMap<>();
 
+        PairSelector.MatchingResult matchingResult = PairSelector.getBestMatches(availableSpeedDatingUserMap);
+        List<String[]> pairs = matchingResult.pairs();
+        List<String> finalUnpairedUsers = matchingResult.finalUnpairedUsers();
+        int zeroPairsCount = matchingResult.zeroPairsCount();
 
-        updateUsers(userMatchingMap);
+        System.out.println(roundCounter);
+        System.out.println(pairs);
+        System.out.println(finalUnpairedUsers);
+        System.out.println(zeroPairsCount);
+        System.out.println("--------------------------------------------------");
+
+        updateUsers(pairs);
     }
 
     public void startEvent() {
@@ -109,11 +122,11 @@ public class SpeedDatingEvent {
             try {
                 prepareMemberMap();
                 prepareChannels();
-                startNextRound();
+                runNextRound();
                 lock.lock();
                 try {
                     if (!roundCondition.await(speedDatingConfig.durationSeconds(), TimeUnit.SECONDS)) {
-                        // timeout, handle if needed
+                        stopEvent();
                     }
                 } finally {
                     lock.unlock();
@@ -143,6 +156,4 @@ public class SpeedDatingEvent {
             voiceChannel.delete().queue();
         }
     }
-
-
 }

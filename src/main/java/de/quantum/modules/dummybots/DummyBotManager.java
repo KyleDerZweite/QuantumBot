@@ -72,10 +72,7 @@ public class DummyBotManager implements ShutdownInterface {
 
     public void stopBotsFromGuild(String guildId) {
         ArrayList<JDA> jdaList = dummyBotsMap.getOrDefault(guildId, null);
-        jdaList.forEach(jda -> {
-            jda.shutdown();
-            jda.shutdownNow();
-        });
+        jdaList.forEach(JDA::shutdown);
         dummyBotsMap.remove(guildId);
     }
 
@@ -99,7 +96,6 @@ public class DummyBotManager implements ShutdownInterface {
         for (JDA jda : jdaList) {
             if (jda.getSelfUser().getId().equals(botId)) {
                 jda.shutdown();
-                jda.shutdownNow();
                 jdaList.remove(jda);
                 break;
             }
@@ -125,9 +121,7 @@ public class DummyBotManager implements ShutdownInterface {
         dummyBotsMap.forEach((guildId, jdaList) -> jdaList.forEach((jda) -> {
             jda.getPresence().setPresence(OnlineStatus.OFFLINE, null);
             jda.shutdown();
-            jda.shutdownNow();
             log.debug("Shutting down {}", Utils.getJdaShardGuildCountString(jda));
-            jda.shutdownNow();
         }));
         dummyBotsMap.clear();
     }
