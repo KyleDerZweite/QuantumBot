@@ -4,18 +4,18 @@ import de.quantum.core.commands.CommandAnnotation;
 import de.quantum.core.commands.CommandInterface;
 import de.quantum.core.commands.CommandType;
 import de.quantum.core.module.ModuleCommand;
-import de.quantum.modules.speeddating.entities.SpeedDatingConfig;
 import de.quantum.modules.speeddating.entities.SpeedDatingEvent;
 import lombok.extern.slf4j.Slf4j;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.dv8tion.jda.api.utils.messages.MessageEditData;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 
 import java.util.Objects;
@@ -32,10 +32,11 @@ public class SpeedDatingCommand implements CommandInterface<SlashCommandInteract
                 new SubcommandData("stop", "Stops the speed-dating event"),
                 new SubcommandData("setup", "Setups the speed-dating event")
                         .addOptions(
-                                new OptionData(OptionType.CHANNEL, "category", "The Category for the system", true),
-                                new OptionData(OptionType.CHANNEL, "voice_channel", "The Channel where the users that want to participate join", true)
+                                new OptionData(OptionType.CHANNEL, "category", "The Category for the system"),
+                                new OptionData(OptionType.CHANNEL, "voice_channel", "The Channel where the users that want to participate join"),
+                                new OptionData(OptionType.INTEGER, "duration", "The time between rounds in Seconds [Default 300s / 5min]")
                         )
-        ).setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MODERATE_MEMBERS));
+        );
     }
 
     @Override
@@ -52,25 +53,16 @@ public class SpeedDatingCommand implements CommandInterface<SlashCommandInteract
     }
 
     private boolean checkConfig(SlashCommandInteractionEvent event, String guildId, String optionName) {
-        assert event.getGuild() != null;
-        if (!SpeedDatingManager.getInstance().getGuildConfigMap().containsKey(event.getGuild().getId())) {
+        if (!SpeedDatingDatabaseManager.containsSpeedDatingConfig(guildId)) {
             event.getHook().editOriginal("Please setup the speed-dating channels before %s!".formatted(optionName)).queue();
             return true;
         }
         return false;
     }
 
-    private boolean checkActiveEvent(SlashCommandInteractionEvent event, String guildId, String optionName) {
-        assert event.getGuild() != null;
-
-        return false;
-    }
-
     public void startSpeedDating(SlashCommandInteractionEvent event) {
         assert event.getGuild() != null;
-        if (checkConfig(event, event.getGuild().getId(), "starting")) {
-            return;
-        }
+        if (checkConfig(event, event.getGuild().getId(), "starting")) return;
         if (SpeedDatingManager.getInstance().getActiveSpeedDatingMap().containsKey(event.getGuild().getId())) {
             event.getHook().editOriginal("There is already a event running!").queue();
             return;
@@ -83,9 +75,7 @@ public class SpeedDatingCommand implements CommandInterface<SlashCommandInteract
 
     public void stopSpeedDating(SlashCommandInteractionEvent event) {
         assert event.getGuild() != null;
-        if (checkConfig(event, event.getGuild().getId(), "stopping")) {
-            return;
-        }
+        if (checkConfig(event, event.getGuild().getId(), "stopping")) return;
         if (!SpeedDatingManager.getInstance().getActiveSpeedDatingMap().containsKey(event.getGuild().getId())) {
             event.getHook().editOriginal("There is no a event running to stop!").queue();
             return;
@@ -95,28 +85,53 @@ public class SpeedDatingCommand implements CommandInterface<SlashCommandInteract
     }
 
     public void setupSpeedDating(SlashCommandInteractionEvent event) {
+        assert event.getGuild() != null;
+
         // Get the options from the command
         OptionMapping categoryOption = event.getOption("category");
         OptionMapping voiceChannelOption = event.getOption("voice_channel");
+        OptionMapping durationOption = event.getOption("duration");
 
-        assert event.getGuild() != null;
-        assert categoryOption != null;
-        assert voiceChannelOption != null;
+        String gid = event.getGuild().getId();
 
-        Category category = categoryOption.getAsChannel().asCategory();
-        VoiceChannel voiceChannel = voiceChannelOption.getAsChannel().asVoiceChannel();
+        VoiceChannel voiceChannel;
+        Category category;
 
-        SpeedDatingManager.getInstance().getGuildConfigMap().remove(event.getGuild().getId());
-        SpeedDatingManager.getInstance().getGuildConfigMap().put(
-                event.getGuild().getId(),
-                new SpeedDatingConfig(
-                        event.getJDA().getSelfUser().getId(),
-                        event.getGuild(),
-                        category,
-                        voiceChannel)
+        String vid = SpeedDatingDatabaseManager.getVoiceChannelId(gid);
+        String cid = SpeedDatingDatabaseManager.getCategoryId(gid);
+        int duration = SpeedDatingDatabaseManager.getDuration(gid);
+
+        if (voiceChannelOption != null) {
+            voiceChannel = voiceChannelOption.getAsChannel().asVoiceChannel();
+            vid = voiceChannel.getId();
+        }
+        if (categoryOption != null && categoryOption.getAsChannel() instanceof Category) {
+            category = categoryOption.getAsChannel().asCategory();
+            cid = category.getId();
+        }
+        if (durationOption != null) {
+            duration = durationOption.getAsInt();
+        }
+
+        SpeedDatingDatabaseManager.insertSpeedDatingConfig(
+                event.getJDA().getSelfUser().getId(),
+                gid, cid, vid, duration
         );
+        EmbedBuilder eb = getSpeedDatingConfigEmbed(vid, cid, duration);
+        event.getHook().editOriginal(MessageEditData.fromEmbeds(eb.build())).queue();
+    }
 
-        event.getHook().editOriginal("Speed dating channels set up successfully!").queue();
+    public static EmbedBuilder getSpeedDatingConfigEmbed(String vid, String cid, int duration) {
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setDescription("""
+                ## Done!
+                
+                Current-Config:
+                - VoiceChannel: <#%s>
+                - Category: <#%s>
+                - Duration: %s
+                """.formatted(vid, cid, duration));
+        return eb;
     }
 
     @Override

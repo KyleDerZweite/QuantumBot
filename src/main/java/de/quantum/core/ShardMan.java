@@ -17,10 +17,8 @@ import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
 import net.dv8tion.jda.api.sharding.ShardManager;
 import net.dv8tion.jda.api.utils.ConcurrentSessionController;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.EnumSet;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 
@@ -73,10 +71,13 @@ public class ShardMan extends ListenerAdapter implements ShutdownInterface {
         return jdaInstanceHashMap.get(botId);
     }
 
-    @NotNull
     public Guild getGuildByJdaAndId(String botId, String guildId) {
         JDA jda = getJDAInstance(botId);
-        return Objects.requireNonNull(jda.getGuildById(guildId));
+        Guild guild = jda.getGuildById(guildId);
+        if (guild == null) {
+            guild = shardManager.getGuildById(guildId);
+        }
+        return guild;
     }
 
     public static void init() {

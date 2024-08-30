@@ -1,7 +1,11 @@
 package de.quantum.modules.speeddating;
 
+import de.quantum.core.ShardMan;
 import de.quantum.core.module.ModuleAnnotation;
-import de.quantum.modules.speeddating.entities.SpeedDatingConfig;
+import de.quantum.core.shutdown.ShutdownAnnotation;
+import de.quantum.core.shutdown.ShutdownInterface;
+import de.quantum.core.utils.CheckUtils;
+import de.quantum.modules.speeddating.entities.SpeedDatingEvent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,7 +19,8 @@ import java.util.concurrent.ConcurrentHashMap;
         moduleAuthorName = "kylederzweite",
         moduleAuthorID = "378542649579143188"
 )
-public class SpeedDatingManager {
+@ShutdownAnnotation
+public class SpeedDatingManager implements ShutdownInterface {
 
     private static volatile SpeedDatingManager INSTANCE = null;
 
@@ -26,7 +31,7 @@ public class SpeedDatingManager {
                             + SpeedDatingManager.class.getName()
                             + " class already exists, Can't create a new instance.");
         }
-        this.guildConfigMap = SpeedDatingDatabaseManager.getSpeedDatingConfigs();
+        this.activeSpeedDatingMap = new ConcurrentHashMap<>();
     }
 
     public static SpeedDatingManager getInstance() {
@@ -41,9 +46,14 @@ public class SpeedDatingManager {
     }
 
     @Getter
-    private final ConcurrentHashMap<String, SpeedDatingConfig> guildConfigMap;
+    private final ConcurrentHashMap<String, SpeedDatingEvent> activeSpeedDatingMap;
 
 
-
-
+    @Override
+    public void shutdown() {
+        activeSpeedDatingMap.forEach(
+                (s, speedDatingEvent) -> speedDatingEvent.stopEvent()
+        );
+        activeSpeedDatingMap.clear();
+    }
 }

@@ -21,8 +21,7 @@ public class Utils {
 
     public static final long MILLIS_IN_A_DAY = 1000 * 60 * 60 * 24;
 
-    public static final int TOTAL_SHARDS = 2;
-
+    public static final int TOTAL_SHARDS = 1;
     public static final String SUPPORT_GUILD_ID = "1255944449700270201";
 
     public static final Locale GERMAN = new Locale("de");

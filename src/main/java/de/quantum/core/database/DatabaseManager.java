@@ -4,8 +4,6 @@ import de.quantum.core.BotType;
 import de.quantum.core.utils.CheckUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import net.dv8tion.jda.api.entities.Guild;
-import org.jetbrains.annotations.Nullable;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -61,7 +59,7 @@ public class DatabaseManager {
         }
     }
 
-    private Statement getStatement() {
+    public Statement getStatement() {
         try {
             return this.connection.createStatement();
         } catch (SQLException e) {
@@ -120,7 +118,7 @@ public class DatabaseManager {
     }
 
     public void insertNewBot(String botId, String encryptedToken, BotType botType) {
-        String sql = "INSERT INTO " + BOT_TABLE_NAME +" (bot_id, token, type) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO " + BOT_TABLE_NAME + " (bot_id, token, type) VALUES (?, ?, ?)";
         try (PreparedStatement stmt = DatabaseManager.getInstance().getConnection().prepareStatement(sql)) {
             stmt.setString(1, botId);
             stmt.setString(2, encryptedToken);
@@ -130,8 +128,6 @@ public class DatabaseManager {
             log.error(e.getMessage(), e);
         }
     }
-
-
 
 
 }
