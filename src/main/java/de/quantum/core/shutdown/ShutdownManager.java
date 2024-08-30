@@ -7,12 +7,24 @@ import org.reflections8.Reflections;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
+import java.util.LinkedList;
 
 @Slf4j
 public class ShutdownManager {
 
     public static void shutdown() {
+        LinkedList<Class<?>> shutdownClasses = new LinkedList<>();
+
         for (Class<?> clazz : new Reflections().getTypesAnnotatedWith(ShutdownAnnotation.class)) {
+            ShutdownAnnotation annotation = clazz.getAnnotation(ShutdownAnnotation.class);
+            if (annotation.position().equalsIgnoreCase("last")) {
+                shutdownClasses.addLast(clazz);
+            } else {
+                shutdownClasses.addFirst(clazz);
+            }
+        }
+
+        for (Class<?> clazz : shutdownClasses) {
             try {
                 // Get the getInstance method if it's a singleton class
                 Method getInstanceMethod = clazz.getMethod("getInstance");

@@ -8,4 +8,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ShutdownAnnotation {
+    String position() default ""; // add a priority element with a default value
 }
