@@ -8,6 +8,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.LinkedList;
+import java.util.concurrent.RejectedExecutionException;
 
 @Slf4j
 public class ShutdownManager {
@@ -30,11 +31,15 @@ public class ShutdownManager {
                 Method getInstanceMethod = clazz.getMethod("getInstance");
                 var instance = getInstanceMethod.invoke(null); // null because it's a static method
 
-                // Ensure the instance implements ShutdownInterface
-                if (instance instanceof ShutdownInterface) {
-                    ((ShutdownInterface) instance).shutdown();
-                } else {
-                    log.error("Instance does not implement ShutdownInterface: {}", clazz.getName());
+                try {
+                    // Ensure the instance implements ShutdownInterface
+                    if (instance instanceof ShutdownInterface) {
+                        ((ShutdownInterface) instance).shutdown();
+                    } else {
+                        log.error("Instance does not implement ShutdownInterface: {}", clazz.getName());
+                    }
+                } catch (RejectedExecutionException e) {
+                    log.debug(e.getMessage());
                 }
             } catch (Exception e) {
                 log.error("Failed to shutdown class: {}", clazz.getName(), e);

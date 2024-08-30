@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -119,10 +120,13 @@ public class SpeedDatingEvent {
         Condition roundCondition = lock.newCondition();
 
         while (isRunning && !eventThread.isInterrupted()) {
+            log.info("Starting event");
             try {
                 prepareMemberMap();
                 prepareChannels();
+                log.info("Now next round");
                 runNextRound();
+                log.info("Done with round preps, now moving members");
                 lock.lock();
                 try {
                     if (!roundCondition.await(speedDatingConfig.durationSeconds(), TimeUnit.SECONDS)) {
@@ -151,9 +155,13 @@ public class SpeedDatingEvent {
     }
 
     public void cleanUp() {
-        finishRound();
-        for (VoiceChannel voiceChannel : createdVoiceChannels) {
-            voiceChannel.delete().queue();
+        try {
+            finishRound();
+            for (VoiceChannel voiceChannel : createdVoiceChannels) {
+                voiceChannel.delete().queue();
+            }
+        } catch (RejectedExecutionException e) {
+            log.debug(e.getMessage());
         }
     }
 }

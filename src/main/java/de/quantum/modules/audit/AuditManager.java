@@ -95,7 +95,8 @@ public class AuditManager implements ShutdownInterface {
                     if (targetId != null && !entry.targetId().equals(targetId)) return false;
                     if (actionTypeId != null && entry.typeKey() != actionTypeId) return false;
                     if (keyword != null && !checkEntryForKeyword(keyword)) return false;
-                    if (targetTypeOrdinal != null && ActionType.from(entry.typeKey()).getTargetType().ordinal() != targetTypeOrdinal) return false;
+                    if (targetTypeOrdinal != null && ActionType.from(entry.typeKey()).getTargetType().ordinal() != targetTypeOrdinal)
+                        return false;
                     return true;
                 })
                 .limit(amount)
@@ -125,7 +126,7 @@ public class AuditManager implements ShutdownInterface {
             case MEMBER, INTEGRATION -> Objects.requireNonNull(guild.getMemberById(targetId)).getAsMention();
             case ROLE -> Objects.requireNonNull(guild.getRoleById(targetId)).getAsMention();
             case CHANNEL ->
-                    Objects.requireNonNull(guild.getChannelById(StandardGuildChannel.class, targetId)).getAsMention();
+                    guild.getChannelById(StandardGuildChannel.class, targetId) != null ? Objects.requireNonNull(guild.getChannelById(StandardGuildChannel.class, targetId)).getAsMention() : "DeletedChannel(id= " + targetId + ")";
             case GUILD -> guild.getName();
             case INVITE -> "Invite";
             case WEBHOOK ->
