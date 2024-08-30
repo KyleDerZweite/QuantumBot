@@ -4,6 +4,7 @@ import de.quantum.core.errors.ErrorManager;
 import de.quantum.core.events.EventAnnotation;
 import de.quantum.core.events.EventInterface;
 import de.quantum.core.utils.CheckUtils;
+import de.quantum.core.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
@@ -20,7 +21,12 @@ public class CommandReflector implements EventInterface<GenericCommandInteractio
 
     @Override
     public void perform(GenericCommandInteractionEvent event) {
-        event.deferReply(true).queue();
+        try {
+            event.deferReply(true).queue();
+        } catch (IllegalStateException e) {
+            log.warn("{}{}", e.getMessage(), "\nSource: %s\nCommand: %s".formatted(Utils.getJdaShardGuildCountString(event.getJDA()), event.getFullCommandName()));
+            return;
+        }
         if (CommandManager.getInstance().getCommandHashMap().containsKey(event.getCommandId())) {
             CommandInterface<? extends GenericCommandInteractionEvent> cmdController = CommandManager.getInstance().getCommandHashMap().get(event.getCommandId());
 
