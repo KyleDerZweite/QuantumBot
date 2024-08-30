@@ -115,13 +115,17 @@ public class CustomBotManager implements ShutdownInterface {
         JDA customBotJda = customJdaInstanceMap.getOrDefault(botId, null);
         if (customBotJda == null) return;
         Activity newActivity = CustomBotDatabaseManager.getCustomBotActivity(botId);
-        updateBotActivity(customBotJda, newActivity);
+        new Thread(() -> updateBotActivity(customBotJda, newActivity)).start();
     }
 
     public void updateBotActivity(JDA jda, Activity newActivity) {
-        jda.getPresence().setActivity(newActivity);
+        try {
+            jda.awaitReady();
+            jda.getPresence().setActivity(newActivity);
+        } catch (InterruptedException e) {
+            log.warn(e.getMessage(), e);
+        }
     }
-
 
     @Override
     public void shutdown() {

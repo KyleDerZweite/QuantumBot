@@ -80,12 +80,12 @@ public class CustomBotCommand implements CommandInterface<SlashCommandInteractio
     }
 
     public void handleStart(SlashCommandInteractionEvent event) {
-        OptionMapping tokenMapping = event.getOption("token");
-        if (tokenMapping == null) {
+        OptionMapping botIdMapping = event.getOption("bot_id");
+        if (botIdMapping == null) {
             event.getHook().editOriginal("Please provide a valid bot id!").queue();
             return;
         }
-        String botId = tokenMapping.getAsString();
+        String botId = botIdMapping.getAsString();
         CustomBotManager.getInstance().startBot(botId);
         event.getHook().editOriginal("Started <@" + botId + ">").queue();
     }
