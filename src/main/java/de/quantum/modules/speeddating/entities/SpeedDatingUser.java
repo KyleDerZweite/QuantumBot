@@ -5,11 +5,13 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
+import net.dv8tion.jda.api.requests.RestAction;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.helpers.CheckReturnValue;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -50,23 +52,23 @@ public class SpeedDatingUser {
         return this.matchHistory.getOrDefault(userId, -1);
     }
 
-    public boolean moveTo(VoiceChannel voiceChannel) {
+    @CheckReturnValue
+    public void moveTo(VoiceChannel voiceChannel) {
         this.currentVoiceChannel = voiceChannel;
         if (voiceChannel == null || this.member == null || this.member.getVoiceState() == null || !this.isAvailable()) {
-            return false;
+            log.debug("Moving member failed (vc={} member={} available={})", voiceChannel, member, available);
+            return;
         }
         try {
             assert this.member != null;
-            voiceChannel.getGuild().moveVoiceMember(this.member, voiceChannel).queue();
-        } catch (IllegalStateException | RejectedExecutionException e) {
+            voiceChannel.getGuild().moveVoiceMember(this.member, voiceChannel).submit().join();
+        } catch (AssertionError e) {
             log.debug(e.getMessage());
-            return false;
         }
-        return true;
     }
 
-    public boolean reconnect() {
-        return moveTo(this.currentVoiceChannel);
+    public void reconnect() {
+        moveTo(this.currentVoiceChannel);
     }
 
     @NotNull

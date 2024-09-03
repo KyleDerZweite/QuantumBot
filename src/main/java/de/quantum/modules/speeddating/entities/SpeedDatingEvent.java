@@ -5,14 +5,14 @@ import de.quantum.modules.speeddating.SpeedDatingManager;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
-import org.jetbrains.annotations.NotNull;
+import net.dv8tion.jda.api.requests.RestAction;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class SpeedDatingEvent {
@@ -29,6 +29,7 @@ public class SpeedDatingEvent {
 
     private final Set<String> waitingList;
 
+    private String oldChannelName;
 
     public SpeedDatingEvent(Guild guild) {
         this.guild = guild;
@@ -86,53 +87,60 @@ public class SpeedDatingEvent {
         ConcurrentHashMap<String, SpeedDatingUser> availableSpeedDatingUserMap = getAvailableSpeedDatingUserMap();
         ConcurrentHashMap<String, String> pairsMap = getBestMatches(availableSpeedDatingUserMap);
 
+        AtomicInteger channelIndex = new AtomicInteger(0);
+        pairsMap.forEach((userId1, userId2) -> {
+            int currentIndex = channelIndex.getAndIncrement();
+            if (currentIndex < createdVoiceChannels.size()) {
+                VoiceChannel pairChannel = createdVoiceChannels.get(currentIndex);
+                if (availableSpeedDatingUserMap.containsKey(userId1) && availableSpeedDatingUserMap.containsKey(userId2)) {
+                    availableSpeedDatingUserMap.get(userId1).moveTo(pairChannel);
+                    availableSpeedDatingUserMap.get(userId2).moveTo(pairChannel);
+                }
+            }
+        });
         updateUsers(pairsMap);
     }
 
     public void startEvent() {
-        ReentrantLock lock = new ReentrantLock();
-        Condition roundCondition = lock.newCondition();
-
-        while (isRunning && !eventThread.isInterrupted()) {
-            log.info("Starting event");
-            try {
-                prepareMemberMap();
-                prepareChannels();
-                log.info("Now next round");
-                runNextRound();
-                log.info("Done with round preps, now moving members");
-                lock.lock();
+        oldChannelName = speedDatingConfig.voiceChannel().getName();
+        try {
+            while (isRunning && !eventThread.isInterrupted()) {
                 try {
-                    if (!roundCondition.await(speedDatingConfig.durationSeconds(), TimeUnit.SECONDS)) {
-                        stopEvent();
+                    prepareMemberMap();
+                    prepareChannels();
+                    runNextRound();
+                    // Wait for the desired duration
+                    Thread.sleep(speedDatingConfig.durationSeconds() * 1000L); // Convert seconds to milliseconds
+                    if (!hasMissingMatches(getAvailableSpeedDatingUserMap())) {
+                        break;
                     }
-                } finally {
-                    lock.unlock();
+                    finishRound();
+                    roundCounter++;
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    log.warn(e.getMessage(), e);
                 }
-                if (!isRunning) {
-                    break;
-                }
-                finishRound();
-                roundCounter++;
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                log.warn(e.getMessage(), e);
             }
+        } finally {
+            cleanUp();
+            SpeedDatingManager.getInstance().getActiveSpeedDatingMap().remove(guild.getId());
         }
     }
 
     public void stopEvent() {
         isRunning = false;
-        eventThread.interrupt();
-        cleanUp();
-        SpeedDatingManager.getInstance().getActiveSpeedDatingMap().remove(guild.getId());
+        if (!eventThread.isInterrupted()) eventThread.interrupt();
     }
 
     public void cleanUp() {
         try {
             finishRound();
             for (VoiceChannel voiceChannel : createdVoiceChannels) {
-                voiceChannel.delete().queue();
+                try {
+                    voiceChannel.delete().queue();
+                } catch (Exception e) {
+                    log.warn(e.getMessage(), e);
+                }
             }
         } catch (RejectedExecutionException e) {
             log.debug(e.getMessage());
