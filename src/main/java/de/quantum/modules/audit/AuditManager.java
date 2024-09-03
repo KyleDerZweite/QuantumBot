@@ -144,55 +144,55 @@ public class AuditManager implements ShutdownInterface {
     @NotNull
     private String getMemberMentionOrFallback(@NotNull Guild guild, String targetId) {
         Member entity = guild.getMemberById(targetId);
-        return entity != null ? entity.getAsMention() : "UnknownMember(id=" + targetId + ")";
+        return entity != null ? entity.getAsMention() : "UnknownMember";
     }
 
     @NotNull
     private String getRoleMentionOrFallback(@NotNull Guild guild, String targetId) {
         Role entity = guild.getRoleById(targetId);
-        return entity != null ? entity.getAsMention() : "UnknownRole(id=" + targetId + ")";
+        return entity != null ? entity.getAsMention() : "UnknownRole";
     }
 
     @NotNull
     private String getThreadMentionOrFallback(@NotNull Guild guild, String targetId) {
         ThreadChannel entity = guild.getThreadChannelById(targetId);
-        return entity != null ? entity.getAsMention() : "UnknownThread(id=" + targetId + ")";
+        return entity != null ? entity.getAsMention() : "UnknownThread";
     }
 
     @NotNull
     private String getEventMentionOrFallback(@NotNull Guild guild, String targetId) {
         ScheduledEvent entity = guild.getScheduledEventById(targetId);
-        return entity != null ? entity.getName() : "UnknownScheduledEvent(id=" + targetId + ")";
+        return entity != null ? entity.getName() : "UnknownScheduledEvent";
     }
 
     @NotNull
     private String getChannelMentionOrFallback(@NotNull Guild guild, String targetId) {
         StandardGuildChannel channel = guild.getChannelById(StandardGuildChannel.class, targetId);
-        return channel != null ? channel.getAsMention() : "DeletedChannel(id=" + targetId + ")";
+        return channel != null ? channel.getAsMention() : "DeletedChannel";
     }
 
     @NotNull
     private String getWebhookNameOrFallback(@NotNull Guild guild, String targetId) {
         Webhook webhook = guild.retrieveWebhooks().submit().join().stream().filter(w -> w.getId().equals(targetId)).findFirst().orElse(null);
-        return webhook != null ? webhook.getName() : "DeletedWebhook(id=" + targetId + ")";
+        return webhook != null ? webhook.getName() : "DeletedWebhook";
     }
 
     @NotNull
     private String getEmojiMentionOrFallback(@NotNull Guild guild, String targetId) {
         Emoji emoji = guild.getEmojiById(targetId);
-        return emoji != null ? emoji.getFormatted() : "UnknownEmoji(id=" + targetId + ")";
+        return emoji != null ? emoji.getFormatted() : "UnknownEmoji";
     }
 
     @NotNull
     private String getStickerNameOrFallback(@NotNull Guild guild, String targetId) {
         Sticker sticker = guild.retrieveStickers().submit().join().stream().filter(s -> s.getId().equals(targetId)).findFirst().orElse(null);
-        return sticker != null ? sticker.getName() : "DeletedSticker(id=" + targetId + ")";
+        return sticker != null ? sticker.getName() : "DeletedSticker";
     }
 
     @NotNull
     private String getAutoModRuleNameOrFallback(@NotNull Guild guild, String targetId) {
         AutoModRule rule = guild.retrieveAutoModRuleById(targetId).submit().join();
-        return rule != null ? rule.getName() : "DeletedAutoModRule(id=" + targetId + ")";
+        return rule != null ? rule.getName() : "DeletedAutoModRule";
     }
 
     public IMentionable getTarget(Guild guild, @NotNull TargetType targetType, String targetId) {
