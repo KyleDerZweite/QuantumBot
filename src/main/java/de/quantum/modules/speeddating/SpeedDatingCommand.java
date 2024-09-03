@@ -81,7 +81,7 @@ public class SpeedDatingCommand implements CommandInterface<SlashCommandInteract
             return;
         }
         SpeedDatingManager.getInstance().getActiveSpeedDatingMap().get(event.getGuild().getId()).stopEvent();
-        event.getHook().editOriginal("Starting Speed-Dating Event").queue();
+        event.getHook().editOriginal("Stopped Speed-Dating Event").queue();
     }
 
     public void setupSpeedDating(SlashCommandInteractionEvent event) {
