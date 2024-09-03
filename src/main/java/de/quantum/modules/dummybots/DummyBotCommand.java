@@ -230,7 +230,7 @@ public class DummyBotCommand implements CommandInterface<SlashCommandInteraction
         VoiceChannel voiceChannel;
         if (CheckUtils.checkNotNull(event.getOption("voice_channel"))) {
             voiceChannel = Objects.requireNonNull(event.getOption("voice_channel")).getAsChannel().asVoiceChannel();
-        } else if (CheckUtils.checkNotNull(event.getMember().getVoiceState())) {
+        } else if (CheckUtils.checkNotNull(event.getMember().getVoiceState()) && CheckUtils.checkNotNull(event.getMember().getVoiceState().getChannel())) {
             voiceChannel = Objects.requireNonNull(event.getMember().getVoiceState().getChannel()).asVoiceChannel();
         } else {
             event.getHook().editOriginal("No Voice Channel provided!").queue();
