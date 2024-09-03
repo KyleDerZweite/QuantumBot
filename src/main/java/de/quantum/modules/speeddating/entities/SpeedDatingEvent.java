@@ -1,14 +1,13 @@
 package de.quantum.modules.speeddating.entities;
 
-import de.quantum.modules.speeddating.PairSelector;
 import de.quantum.modules.speeddating.SpeedDatingDatabaseManager;
 import de.quantum.modules.speeddating.SpeedDatingManager;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -28,12 +27,16 @@ public class SpeedDatingEvent {
     private final LinkedList<VoiceChannel> createdVoiceChannels;
     private final Thread eventThread;
 
+    private final Set<String> waitingList;
+
+
     public SpeedDatingEvent(Guild guild) {
         this.guild = guild;
         this.speedDatingUserMap = new ConcurrentHashMap<>();
         this.createdVoiceChannels = new LinkedList<>();
         this.eventThread = new Thread(this::startEvent);
         this.speedDatingConfig = SpeedDatingDatabaseManager.getSpeedDatingConfig(guild.getId());
+        this.waitingList = new HashSet<>();
 
         eventThread.start();
     }
@@ -72,25 +75,6 @@ public class SpeedDatingEvent {
         }
     }
 
-    public ConcurrentHashMap<String, SpeedDatingUser> getAvailableSpeedDatingUserMap() {
-        ConcurrentHashMap<String, SpeedDatingUser> availableSpeedDatingUserMap = new ConcurrentHashMap<>();
-        speedDatingUserMap.forEach((id, user) -> {
-            if (user.isAvailable()) {
-                availableSpeedDatingUserMap.put(id, user);
-            }
-        });
-        return availableSpeedDatingUserMap;
-    }
-
-    public void updateUsers(List<String[]> pairs) {
-        for (String[] pair : pairs) {
-            String userId1 = pair[0];
-            String userId2 = pair[1];
-            speedDatingUserMap.get(userId1).updateHistory(userId2, roundCounter);
-            speedDatingUserMap.get(userId2).updateHistory(userId1, roundCounter);
-        }
-    }
-
     public void finishRound() {
         speedDatingUserMap.forEach((id, user) -> {
             user.moveTo(speedDatingConfig.voiceChannel());
@@ -100,19 +84,9 @@ public class SpeedDatingEvent {
 
     public void runNextRound() {
         ConcurrentHashMap<String, SpeedDatingUser> availableSpeedDatingUserMap = getAvailableSpeedDatingUserMap();
+        ConcurrentHashMap<String, String> pairsMap = getBestMatches(availableSpeedDatingUserMap);
 
-        PairSelector.MatchingResult matchingResult = PairSelector.getBestMatches(availableSpeedDatingUserMap);
-        List<String[]> pairs = matchingResult.pairs();
-        List<String> finalUnpairedUsers = matchingResult.finalUnpairedUsers();
-        int zeroPairsCount = matchingResult.zeroPairsCount();
-
-        System.out.println(roundCounter);
-        System.out.println(pairs);
-        System.out.println(finalUnpairedUsers);
-        System.out.println(zeroPairsCount);
-        System.out.println("--------------------------------------------------");
-
-        updateUsers(pairs);
+        updateUsers(pairsMap);
     }
 
     public void startEvent() {
@@ -164,4 +138,76 @@ public class SpeedDatingEvent {
             log.debug(e.getMessage());
         }
     }
+
+    public ConcurrentHashMap<String, SpeedDatingUser> getAvailableSpeedDatingUserMap() {
+        ConcurrentHashMap<String, SpeedDatingUser> availableSpeedDatingUserMap = new ConcurrentHashMap<>();
+        speedDatingUserMap.forEach((id, user) -> {
+            if (user.isAvailable()) {
+                availableSpeedDatingUserMap.put(id, user);
+            }
+        });
+        return availableSpeedDatingUserMap;
+    }
+
+    private void updateUsers(ConcurrentHashMap<String, String> pairs) {
+        pairs.forEach((userId1, userId2) -> {
+            speedDatingUserMap.get(userId1).updateHistory(userId2, roundCounter);
+            speedDatingUserMap.get(userId2).updateHistory(userId1, roundCounter);
+        });
+
+        // Clear the waiting list
+        waitingList.clear();
+        // Add unpaired users to the waiting list
+        speedDatingUserMap.keySet().forEach(userId -> {
+            if (!pairs.containsKey(userId) && !pairs.containsValue(userId)) {
+                waitingList.add(userId);
+            }
+        });
+    }
+
+    public ConcurrentHashMap<String, String> getBestMatches(ConcurrentHashMap<String, SpeedDatingUser> tMap) {
+        List<String> users = new ArrayList<>(tMap.keySet());
+        ConcurrentHashMap<String, LinkedList<String>> bestPossibleMatches = new ConcurrentHashMap<>();
+        tMap.forEach((userId, speedDatingUser) -> bestPossibleMatches.put(userId, speedDatingUser.getBestMatches(users)));
+
+        ConcurrentHashMap<String, String> pairsMap = new ConcurrentHashMap<>();
+
+        // Sort users by the number of available matches
+        List<String> sortedUsers = new ArrayList<>(bestPossibleMatches.keySet());
+        sortedUsers.sort((u1, u2) -> {
+            int u1Waiting = waitingList.contains(u1) ? 0 : 1;
+            int u2Waiting = waitingList.contains(u2) ? 0 : 1;
+            if (u1Waiting != u2Waiting) {
+                return u1Waiting - u2Waiting;
+            } else {
+                return tMap.get(u2).getFilterValue(users) - tMap.get(u1).getFilterValue(users);
+            }
+        });
+
+        for (String userId : sortedUsers) {
+            LinkedList<String> matches = bestPossibleMatches.get(userId);
+            for (String matchId : matches) {
+                if (!pairsMap.containsKey(userId) && !pairsMap.containsKey(matchId) && !pairsMap.containsValue(userId) && !pairsMap.containsValue(matchId)) {
+                    pairsMap.put(userId, matchId);
+                    break;
+                }
+            }
+        }
+        return pairsMap;
+    }
+
+    public boolean hasMissingMatches(ConcurrentHashMap<String, SpeedDatingUser> tMap) {
+        List<String> users = new ArrayList<>(tMap.keySet());
+        return tMap.entrySet().stream().anyMatch((entry) -> entry.getValue().hasMissingMatch(users));
+    }
+
+    public int estimateRounds(int n) {
+        if (n <= 2) {
+            return n;
+        } else {
+            return estimateRounds(n / 2) + estimateRounds(n - n / 2);
+        }
+    }
+
+
 }

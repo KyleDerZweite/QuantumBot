@@ -1,15 +1,16 @@
 package de.quantum.modules.speeddating.entities;
 
+import de.quantum.core.entities.CircularList;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.LinkedList;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Data
@@ -20,7 +21,7 @@ public class SpeedDatingUser {
     private VoiceChannel currentVoiceChannel;
     private boolean available = false;
 
-    private final LinkedList<String> lastThreeMatches;
+    private final CircularList lastThreeMatches;
 
     private final String testUserId;
 
@@ -29,7 +30,7 @@ public class SpeedDatingUser {
         this.matchHistory = new ConcurrentHashMap<>();
         this.currentVoiceChannel = null;
         this.testUserId = testUserId;
-        this.lastThreeMatches = new LinkedList<>();
+        this.lastThreeMatches = new CircularList(3);
     }
 
     public SpeedDatingUser(Member member) {
@@ -37,14 +38,11 @@ public class SpeedDatingUser {
         this.matchHistory = new ConcurrentHashMap<>();
         this.currentVoiceChannel = null;
         this.testUserId = null;
-        this.lastThreeMatches = new LinkedList<>();
+        this.lastThreeMatches = new CircularList(3);
     }
 
     public void updateHistory(String userId, int roundCounter) {
         this.matchHistory.put(userId, roundCounter);
-        if (this.lastThreeMatches.size() > 3) {
-            this.lastThreeMatches.removeFirst();
-        }
         this.lastThreeMatches.addLast(userId);
     }
 
@@ -71,18 +69,35 @@ public class SpeedDatingUser {
         return moveTo(this.currentVoiceChannel);
     }
 
-    public void initUserId(String userId) {
-        if (!matchHistory.containsKey(userId)) {
-            matchHistory.put(userId, 0);
-        }
-    }
-
     @NotNull
     public String getUserId() {
         if (this.member == null) {
             return Objects.requireNonNullElse(this.testUserId, "null");
         }
         return this.member.getId();
+    }
+
+    public LinkedList<String> getBestMatches(@NotNull List<String> users) {
+        return users.stream()
+                .filter(user -> !user.equals(getUserId()))
+                .map(user -> new AbstractMap.SimpleEntry<>(user, this.getRoundMatched(user)))
+                .filter(entry -> !lastThreeMatches.contains(entry.getKey()))
+                .sorted(Comparator.comparingInt(Map.Entry::getValue))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toCollection(LinkedList::new));
+    }
+
+    public boolean hasMissingMatch(@NotNull List<String> users) {
+        return users.stream()
+                .filter(user -> !user.equals(getUserId()))
+                .anyMatch(user -> !matchHistory.containsKey(user));
+    }
+
+    public int getFilterValue(@NotNull List<String> users) {
+        return (int) users.stream()
+                .filter(user -> !user.equals(getUserId()))
+                .filter(user -> !matchHistory.containsKey(user))
+                .count();
     }
 
 }

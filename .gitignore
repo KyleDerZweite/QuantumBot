@@ -17,6 +17,7 @@ src/main/resources/dummy_token.properties
 logs/*
 class_archive/*
 src/main/java/de/quantum/TestMain.java
+*Test*
 
 ### Eclipse ###
 .apt_generated
