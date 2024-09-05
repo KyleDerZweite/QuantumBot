@@ -23,6 +23,8 @@
         </encoder>
     </appender>
 
+    <logger name="n.d.j.internal.audio.AudioWebSocket" level="INFO"/>
+
     <!-- Logger for the de.quantum package -->
     <logger name="de.quantum" level="DEBUG" additivity="false">
         <appender-ref ref="STDOUT" />

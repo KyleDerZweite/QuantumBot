@@ -8,6 +8,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.LinkedList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.RejectedExecutionException;
 
 @Slf4j
@@ -25,6 +26,9 @@ public class ShutdownManager {
             }
         }
 
+        // Increment the latch count by the number of shutdown classes
+        CountDownLatch latch = new CountDownLatch(shutdownClasses.size());
+
         for (Class<?> clazz : shutdownClasses) {
             try {
                 // Get the getInstance method if it's a singleton class
@@ -34,26 +38,57 @@ public class ShutdownManager {
                 try {
                     // Ensure the instance implements ShutdownInterface
                     if (instance instanceof ShutdownInterface) {
-                        ((ShutdownInterface) instance).shutdown();
+                        // Use a separate thread to call shutdown() and count down the latch
+                        Thread shutdownThread = new Thread(() -> {
+                            try {
+                                ((ShutdownInterface) instance).shutdown();
+                            } catch (RejectedExecutionException e) {
+                                log.debug(e.getMessage());
+                            } finally {
+                                latch.countDown(); // Count down the latch
+                            }
+                        });
+                        shutdownThread.start();
                     } else {
                         log.error("Instance does not implement ShutdownInterface: {}", clazz.getName());
+                        latch.countDown(); // Count down the latch if instance doesn't implement ShutdownInterface
                     }
-                } catch (RejectedExecutionException e) {
-                    log.debug(e.getMessage());
+                } catch (Exception e) {
+                    log.error("Failed to shutdown class: {}", clazz.getName(), e);
+                    try {
+                        ShutdownInterface shutdownInterface = (ShutdownInterface) clazz.getDeclaredConstructors()[0].newInstance();
+                        // Use a separate thread to call shutdown() and count down the latch
+                        Thread shutdownThread = new Thread(() -> {
+                            try {
+                                shutdownInterface.shutdown();
+                            } catch (Exception ex) {
+                                log.error(ex.getMessage(), ex);
+                            } finally {
+                                latch.countDown(); // Count down the latch
+                            }
+                        });
+                        shutdownThread.start();
+                    } catch (InstantiationException | IllegalAccessException |
+                             InvocationTargetException newInstanceException) {
+                        log.error(newInstanceException.getMessage(), newInstanceException);
+                        latch.countDown(); // Count down the latch if instance creation fails
+                    }
                 }
             } catch (Exception e) {
                 log.error("Failed to shutdown class: {}", clazz.getName(), e);
-                try {
-                    ShutdownInterface shutdownInterface = (ShutdownInterface) clazz.getDeclaredConstructors()[0].newInstance();
-                    shutdownInterface.shutdown();
-                } catch (InstantiationException | IllegalAccessException |
-                         InvocationTargetException newInstanceException) {
-                    log.error(newInstanceException.getMessage(), newInstanceException);
-                }
+                latch.countDown(); // Count down the latch if instance creation fails
             }
         }
 
         try {
+            // Wait for all shutdown tasks to finish
+            latch.await();
+        } catch (InterruptedException e) {
+            log.error(e.getMessage(), e);
+        }
+
+        try {
+            // Close the database connection after all shutdown tasks have finished
             DatabaseManager.getInstance().getConnection().close();
         } catch (SQLException e) {
             log.error(e.getMessage(), e);
