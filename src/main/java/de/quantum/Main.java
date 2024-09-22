@@ -3,10 +3,12 @@ package de.quantum;
 
 import de.quantum.core.ShardMan;
 import de.quantum.core.commands.CommandManager;
+import de.quantum.core.database.DatabaseConfig;
 import de.quantum.core.database.DatabaseManager;
 import de.quantum.core.module.ModuleManager;
 import de.quantum.core.shutdown.ShutdownManager;
 import de.quantum.core.utils.ConsoleScanner;
+import de.quantum.core.utils.Secret;
 import de.quantum.modules.custombot.CustomBotManager;
 import de.quantum.modules.dummybots.DummyBotManager;
 
@@ -23,7 +25,7 @@ public class Main {
             System.out.println("Usage: java -jar QuantumBot.jar <secret key> <token>");
             System.exit(1);
         }
-        SECRET_KEY = args[0];
+        SECRET_KEY = args[0].replace("'","\"");
         TOKEN = args[1];
 
         DatabaseManager.getInstance().init();
