@@ -35,7 +35,7 @@ dependencies {
 
 tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
     archiveBaseName.set("QuantumBot") // Set the base name for the JAR
-    archiveVersion.set("1.0.0") // Set the version
+    archiveVersion.set("") // Set the version
     archiveClassifier.set("") // Remove the classifier
     manifest {
         attributes["Main-Class"] = "de.quantum.Main" // Specify your main class
