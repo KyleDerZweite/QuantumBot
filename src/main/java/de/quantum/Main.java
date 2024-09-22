@@ -27,6 +27,8 @@ public class Main {
         }
         SECRET_KEY = args[0].replace("'","\"");
         TOKEN = args[1];
+        //TODO REMOVE!
+        System.out.println(SECRET_KEY + " " + TOKEN);
 
         DatabaseManager.getInstance().init();
         ModuleManager.getInstance().init();
