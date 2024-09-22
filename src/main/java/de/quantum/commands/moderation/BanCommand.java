@@ -8,8 +8,9 @@ import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 
-@CommandAnnotation
+//@CommandAnnotation
 public class BanCommand implements CommandInterface<SlashCommandInteractionEvent> {
+
     @Override
     public CommandDataImpl getCommandData() {
         return new CommandDataImpl("ban","Bans the provided user").addOptions();
