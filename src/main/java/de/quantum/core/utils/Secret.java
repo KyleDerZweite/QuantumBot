@@ -35,6 +35,8 @@ public class Secret {
     }
 
     public static String decrypt(@NotNull String ciphertext, @NotNull String decryptKey) {
+        //TODO REMOVE
+        System.out.println(ciphertext + " " + decryptKey);
         try {
             SecretKeySpec secretKey = new SecretKeySpec(decryptKey.getBytes(), "AES");
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
