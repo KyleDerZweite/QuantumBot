@@ -2,20 +2,16 @@
 
 QuantumBot is a Discord bot built with [JDA](https://jda.wiki/using-jda/getting-started/) (Java Discord API) to enhance your Discord server experience with intuitive features.
 
-## Features
+# Setup
 
-- **Custom-Bot**: Starting a custom bot with the token, that runs with most functionality or the QuantumBot
-- **Level-System**: Chat- & Voice-XP, level roles, ...
-- **Speed-dating-System**: Event Module, with semi-random matching, ensures everyone gets matched at least once!
+- **SECRET_KEY** : Single quotation marks ' are replaced by normal quotation marks `' -> "`
+- **TOKEN** : The token from the [Discord Developer Portal](https://discord.com/developers/applications) for your application
 
-## Command - List
+# Run
 
-- **/ping**: Displays the average Gateway Ping.
-- **/custom_bot start**: Description of command 2.
-- **/custom_bot stop**: Description of command 2.
-- **/custom_bot update**: Description of command 2.
-- **/speed_dating start**: Starts the Speed-dating System which then creates channels and moves members.  
-- **/speed_dating stop**: Stops the Speed-dating System and cleans up the created channels.
+- Java at-least v21
+- `java -jar application.jar <secret_key> <token>`
+
 
 ## Support
 
