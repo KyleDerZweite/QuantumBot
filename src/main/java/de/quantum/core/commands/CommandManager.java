@@ -113,13 +113,13 @@ public class CommandManager {
             log.error("JDA instance is null, cannot delete unused commands.");
             return;
         }
-        List<Command> commands = jda.retrieveCommands().submit().join();
-        for (Command command : commands) {
-            if (!commandHashMap.containsKey(command.getId())) {
-                log.debug("{} delete Command: {}", Utils.getJdaShardGuildCountString(jda), command.getName());
-                command.delete().queue();
-            }
-        }
+//        List<Command> commands = jda.retrieveCommands().submit().join();
+//        for (Command command : commands) {
+//            if (!commandHashMap.containsKey(command.getId())) {
+//                log.debug("{} delete Command: {}", Utils.getJdaShardGuildCountString(jda), command.getName());
+//                command.delete().queue();
+//            }
+//        }
     }
 
     public static void localizeCommandDescription(CommandDataImpl commandData, String languageKey) {
