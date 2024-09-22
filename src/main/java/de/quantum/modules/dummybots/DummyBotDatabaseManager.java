@@ -39,6 +39,11 @@ public class DummyBotDatabaseManager {
 
     @NotNull
     public static ConcurrentHashMap<String, ArrayList<String>> getDummyBots() {
+        return getDummyBots(false);
+    }
+
+    @NotNull
+    public static ConcurrentHashMap<String, ArrayList<String>> getDummyBots(boolean ignoreActive) {
         ConcurrentHashMap<String, ArrayList<String>> guildDummyTokenMap = new ConcurrentHashMap<>();
         ResultSet rs = DatabaseManager.getInstance().selectFrom("*", DUMMY_BOT_TABLE_NAME);
         if (CheckUtils.checkNull(rs)) {
@@ -54,7 +59,13 @@ public class DummyBotDatabaseManager {
                 ArrayList<String> tokens = guildDummyTokenMap.get(guildId);
                 String botId = rs.getString("bot_id");
                 boolean isActive = rs.getBoolean("active");
-                if (!isActive) continue;
+                /*
+                Active = False && IgnoreActive = false -> continues
+                Active = True -> Never continues
+                IgnoreActive = True -> Never continues
+                Both must be false only then it skips the selection
+                 */
+                if (!isActive && !ignoreActive) continue;
                 ResultSet botTokenSet = DatabaseManager.getInstance().selectFromWhere("token", DatabaseManager.BOT_TABLE_NAME, "bot_id", botId);
                 if (botTokenSet.next()) {
                     String botToken = botTokenSet.getString("token");
@@ -69,8 +80,8 @@ public class DummyBotDatabaseManager {
         return guildDummyTokenMap;
     }
 
-    public static ArrayList<String> getGuildDummyBotTokens(String guildId) {
-        ConcurrentHashMap<String, ArrayList<String>> dummyBotsMap = getDummyBots();
+    public static ArrayList<String> getGuildDummyBotTokens(String guildId, boolean ignoreActive) {
+        ConcurrentHashMap<String, ArrayList<String>> dummyBotsMap = getDummyBots(ignoreActive);
         return dummyBotsMap.get(guildId);
     }
 
