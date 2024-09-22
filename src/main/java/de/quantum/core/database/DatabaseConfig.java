@@ -14,7 +14,7 @@ public class DatabaseConfig {
     static {
         try (InputStream input = DatabaseConfig.class.getClassLoader().getResourceAsStream("database.properties")) {
             if (input == null) {
-                log.error("Sorry, unable to find db.properties");
+                log.error("Sorry, unable to find database.properties");
                 System.exit(1);
             }
 

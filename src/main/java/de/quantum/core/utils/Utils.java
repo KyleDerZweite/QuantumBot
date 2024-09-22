@@ -1,20 +1,24 @@
 package de.quantum.core.utils;
 
+import de.quantum.Main;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.ApplicationTeam;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.interactions.InteractionHook;
+
+import java.awt.*;
 import java.nio.file.Paths;
-import java.awt.Color;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class Utils {
@@ -49,11 +53,11 @@ public class Utils {
      */
 
     public static String getEncryptKey() {
-        return System.getenv("SECRET_KEY");
+        return Main.SECRET_KEY;
     }
 
     public static String getToken() {
-        return System.getenv("TOKEN");
+        return Main.TOKEN;
     }
 
 

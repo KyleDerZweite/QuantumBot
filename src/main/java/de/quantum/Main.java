@@ -10,10 +10,22 @@ import de.quantum.core.utils.ConsoleScanner;
 import de.quantum.modules.custombot.CustomBotManager;
 import de.quantum.modules.dummybots.DummyBotManager;
 
+import java.util.Arrays;
+
 
 public class Main {
 
+    public static String SECRET_KEY;
+    public static String TOKEN;
+
     public static void main(String[] args) {
+        if (args.length == 0) {
+            System.out.println("Usage: java -jar QuantumBot.jar <secret key> <token>");
+            System.exit(1);
+        }
+        SECRET_KEY = args[0];
+        TOKEN = args[1];
+
         DatabaseManager.getInstance().init();
         ModuleManager.getInstance().init();
         CommandManager.getInstance().loadCommands();
