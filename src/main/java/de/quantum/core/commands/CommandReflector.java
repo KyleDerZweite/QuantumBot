@@ -24,7 +24,7 @@ public class CommandReflector implements EventInterface<GenericCommandInteractio
             log.warn("Command is already acknowledged!\nSource: {}\nCommand: {}", Utils.getJdaShardGuildCountString(event.getJDA()), event.getFullCommandName());
             return;
         }
-        event.deferReply(true).queue();
+        event.deferReply(true).submit().join();
         if (CommandManager.getInstance().getCommandHashMap().containsKey(event.getCommandId())) {
             CommandInterface<? extends GenericCommandInteractionEvent> cmdController = CommandManager.getInstance().getCommandHashMap().get(event.getCommandId());
 

@@ -56,13 +56,6 @@ public class CheckUtils {
             return new ArrayList<>();
         }
 
-        List<TeamMember> teamMemberList = Utils.getTeamInfo(jda).getMembers();
-        for (TeamMember teamMember : teamMemberList) {
-            if (teamMember.getUser().getId().equals(member.getId())) {
-                return new ArrayList<>();
-            }
-        }
-
         ArrayList<Permission> missingPermissions = new ArrayList<>();
         for (Permission permission : permissions) {
             if (!member.hasPermission(permission) && !member.hasPermission(channel, permission)) {

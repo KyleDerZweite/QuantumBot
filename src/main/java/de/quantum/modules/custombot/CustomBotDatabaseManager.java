@@ -162,6 +162,10 @@ public class CustomBotDatabaseManager {
     }
 
     public static String getCustomBotToken(@NotNull String botId) {
+        return getCustomBotToken(botId, false);
+    }
+
+    public static String getCustomBotToken(@NotNull String botId, boolean ignoreActive) {
         if (ensureTableExists()) return null;
         ResultSet rs = DatabaseManager.getInstance().selectFromWhere("active, verified", DATABASE_NAME, "bot_id", botId);
         if (CheckUtils.checkNull(rs)) {
@@ -171,7 +175,7 @@ public class CustomBotDatabaseManager {
             if (rs.next()) {
                 boolean isActive = rs.getBoolean("active");
                 boolean isVerified = rs.getBoolean("verified");
-                if (!isActive || !isVerified) return null;
+                if ((!isActive && !ignoreActive) || !isVerified) return null;
                 ResultSet botTokenSet = DatabaseManager.getInstance().selectFromWhere("token", DatabaseManager.BOT_TABLE_NAME, "bot_id", botId);
                 if (botTokenSet.next()) {
                     String token = botTokenSet.getString("token");
